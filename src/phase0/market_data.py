@@ -93,6 +93,8 @@ def load_market_snapshot_with_gate(
         degraded = True
         allow_trading = False
         blocked_reasons.append("DB_LOCK_CONFLICT")
+    if not allow_trading:
+        allow_opening = False
     return {
         "ok": bool(snapshot),
         "allow_trading": allow_trading,

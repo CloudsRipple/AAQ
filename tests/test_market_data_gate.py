@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 import os
+import sqlite3
 import sys
 import tempfile
 import unittest
@@ -97,6 +98,30 @@ class MarketDataGateTests(unittest.TestCase):
                 )
         self.assertFalse(gate["allow_opening"])
         self.assertTrue(gate["allow_trading"])
+
+    def test_db_lock_conflict_forces_allow_opening_false(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = str(Path(tmp) / "state.db")
+            now_utc = datetime(2026, 3, 10, 15, 0, tzinfo=timezone.utc)
+            snapshot_json = (
+                '{"AAPL":{"reference_price":180.0,"volatility":0.2,'
+                '"snapshot_ts":"2026-03-10T14:59:00+00:00"}}'
+            )
+            env = {
+                "AI_STATE_DB_PATH": db_path,
+                "MARKET_DATA_MODE": "default",
+                "MARKET_SNAPSHOT_JSON": snapshot_json,
+            }
+            with patch.dict(os.environ, env, clear=False):
+                config = load_config()
+                with patch(
+                    "phase0.market_data.record_market_snapshot_state",
+                    side_effect=sqlite3.OperationalError("database is locked"),
+                ):
+                    gate = load_market_snapshot_with_gate(config=config, now_utc=now_utc)
+        self.assertFalse(gate["allow_trading"])
+        self.assertFalse(gate["allow_opening"])
+        self.assertIn("DB_LOCK_CONFLICT", gate["blocked_reasons"])
 
 
 if __name__ == "__main__":

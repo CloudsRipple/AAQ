@@ -96,6 +96,7 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual("artifacts/custom_state.db", config.ai_state_db_path)
         self.assertEqual("artifacts/custom_memory.db", config.ai_memory_db_path)
         self.assertFalse(config.ai_enabled)
+        self.assertFalse(config.event_driven_runtime_enabled)
         self.assertEqual(2, config.discipline_min_actions_per_day)
         self.assertEqual(0.8, config.discipline_hold_score_threshold)
         self.assertTrue(config.discipline_enable_daily_cycle)

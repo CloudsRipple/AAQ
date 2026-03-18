@@ -41,6 +41,8 @@ cp .env.example .env
 python -m phase0.main
 ```
 
+默认情况下主程序走稳定控制面（健康检查循环）。如需启用事件驱动运行时，设置 `EVENT_DRIVEN_RUNTIME_ENABLED=true`。
+
 如果本机没有打开 IBKR Paper Gateway 7497 端口，健康检查会返回 `CONNECTIVITY_UNREACHABLE`，这是预期行为。
 
 ## 配置项
@@ -59,6 +61,7 @@ python -m phase0.main
 | `LLM_MAX_RETRIES` | `3` | 可重试错误的最大重试次数 |
 | `LLM_BACKOFF_SECONDS` | `0.5` | 重试指数退避基础秒数 |
 | `LLM_RATE_LIMIT_PER_SECOND` | `2` | 请求限流（每秒请求数） |
+| `EVENT_DRIVEN_RUNTIME_ENABLED` | `false` | 显式启用事件驱动运行时（默认关闭） |
 
 ## 错误码
 

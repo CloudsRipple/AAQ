@@ -74,6 +74,7 @@ class AppConfig:
     market_data_mode: str
     market_symbols: str
     market_snapshot_json: str
+    event_driven_runtime_enabled: bool
     lane_scheduler_enabled: bool
     lane_rebalance_interval_seconds: int
     lane_scheduler_cycles: int
@@ -179,6 +180,7 @@ def load_config() -> AppConfig:
     market_data_mode = os.getenv("MARKET_DATA_MODE", "default").strip().lower()
     market_symbols = os.getenv("MARKET_SYMBOLS", "AAPL,MSFT,NVDA,XOM")
     market_snapshot_json = os.getenv("MARKET_SNAPSHOT_JSON", "")
+    event_driven_runtime_enabled = _read_bool_env("EVENT_DRIVEN_RUNTIME_ENABLED", False)
     lane_scheduler_enabled = _read_bool_env("LANE_SCHEDULER_ENABLED", False)
     lane_rebalance_interval_seconds = _read_int_env("LANE_REBALANCE_INTERVAL_SECONDS", 60)
     lane_scheduler_cycles = _read_int_env("LANE_SCHEDULER_CYCLES", 1)
@@ -251,6 +253,7 @@ def load_config() -> AppConfig:
         market_data_mode=market_data_mode,
         market_symbols=market_symbols,
         market_snapshot_json=market_snapshot_json,
+        event_driven_runtime_enabled=event_driven_runtime_enabled,
         lane_scheduler_enabled=lane_scheduler_enabled,
         lane_rebalance_interval_seconds=lane_rebalance_interval_seconds,
         lane_scheduler_cycles=lane_scheduler_cycles,

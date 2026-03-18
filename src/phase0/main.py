@@ -77,8 +77,9 @@ def main() -> int:
         setup_logging(config.log_level)
         log_event("bootstrap_ready", config=config_snapshot(config))
         
-        # If in old scheduler mode, run health checks. Otherwise run the new event driven architecture
-        if config.lane_scheduler_enabled:
+        # Event-driven runtime is explicitly opt-in. Default path remains the
+        # stable health-check loop until the event pipeline is fully hardened.
+        if not config.event_driven_runtime_enabled:
             cycles = max(1, config.lane_scheduler_cycles)
             status: dict[str, str] = {}
             for index in range(cycles):
@@ -89,7 +90,7 @@ def main() -> int:
             report = generate_daily_health_report(config)
             log_event("daily_health_summary", summary=report.get("summary", {}))
         else:
-            logger.info("Starting new Event-Driven Architecture...")
+            logger.info("Starting Event-Driven Architecture (explicitly enabled)...")
             asyncio.run(_run_event_driven_architecture(config))
             
         return 0
