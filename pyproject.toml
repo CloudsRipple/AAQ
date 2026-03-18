@@ -1,0 +1,39 @@
+[project]
+name = "aaq-phase0"
+version = "0.1.0"
+description = "Phase 0 foundation for hybrid quant system"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "openai>=1.0.0",
+    "pydantic>=2.7.0",
+    "lancedb>=0.9.0",
+    "sentence-transformers>=3.0.0",
+    "numpy>=1.26.0",
+]
+
+[project.optional-dependencies]
+market = [
+    "ib-insync>=0.9.86",
+    "yfinance>=0.2.40",
+]
+
+[project.scripts]
+phase0-health = "phase0.main:main"
+phase0-ibkr-paper-check = "phase0.ibkr_paper_check:main"
+phase0-llm-check = "phase0.llm_connectivity_check:main"
+phase0-replay = "phase0.replay:main"
+phase0-validation-report = "phase0.phase0_validation_report:main"
+phase0-non-ai-validation-report = "phase0.non_ai_validation_report:main"
+phase0-ibkr-execute = "phase0.ibkr_execution:main"
+phase0-daily-health-report = "phase0.daily_health_report:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

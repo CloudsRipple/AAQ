@@ -1,0 +1,1344 @@
+{
+  "call_graph": [
+    {
+      "caller": "audit.py:ensure_audit_db:29",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.connect",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "audit.py:is_stoploss_override_used:155",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.connect",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "audit.py:list_recent_audits:101",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.connect",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "audit.py:mark_stoploss_override_used:138",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.connect",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "audit.py:write_parameter_audit:72",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.connect",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "ibkr_execution.py:IbkrExecutionClient.__init__:54",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.connect",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "ibkr_execution.py:IbkrExecutionClient.close:115",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.isConnected",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "ibkr_execution.py:IbkrExecutionClient.close:116",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.disconnect",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "ibkr_execution.py:IbkrExecutionClient.submit_bracket_signal:100",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.placeOrder",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "ibkr_execution.py:IbkrExecutionClient.submit_bracket_signal:78",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.qualifyContracts",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "ibkr_execution.py:IbkrExecutionClient.submit_bracket_signal:81",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.bracketOrder",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "ibkr_execution.py:IbkrExecutionClient.submit_bracket_signal:98",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.placeOrder",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "ibkr_execution.py:IbkrExecutionClient.submit_bracket_signal:99",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.placeOrder",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "ibkr_execution.py:execute_cycle:127",
+      "callee": "lanes/__init__.py:run_lane_cycle",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "ibkr_execution.py:execute_cycle:145",
+      "callee": "tests/test_ibkr_execution.py:IbkrExecutionTests._FakeExecClient.submit_bracket_signal",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "ibkr_execution.py:execute_cycle:156",
+      "callee": "phase0_validation_report.py:_ValidationProbeClient.close",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "ibkr_execution.py:main:295",
+      "callee": "phase0_validation_report.py:_parse_args",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "ibkr_execution.py:main:296",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "ibkr_paper_check.py:IbkrInsyncClient.__init__:57",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.connect",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "ibkr_paper_check.py:IbkrInsyncClient.close:100",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.disconnect",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "ibkr_paper_check.py:IbkrInsyncClient.close:99",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.isConnected",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "ibkr_paper_check.py:IbkrInsyncClient.request_l1_snapshot:63",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.qualifyContracts",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "ibkr_paper_check.py:IbkrInsyncClient.request_l1_snapshot:65",
+      "callee": "tests/test_llm_gateway.py:FakeClock.sleep",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "ibkr_paper_check.py:IbkrInsyncClient.request_news:81",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.qualifyContracts",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "ibkr_paper_check.py:main:389",
+      "callee": "ibkr_execution.py:_parse_args",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "ibkr_paper_check.py:run_probe:310",
+      "callee": "phase0_validation_report.py:_ValidationProbeClient.request_l1_snapshot",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "ibkr_paper_check.py:run_probe:312",
+      "callee": "phase0_validation_report.py:_ValidationProbeClient.request_news",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "ibkr_paper_check.py:run_probe:358",
+      "callee": "tests/test_llm_gateway.py:FakeClock.sleep",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "ibkr_paper_check.py:run_probe:365",
+      "callee": "ibkr_execution.py:ExecutionClient.close",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "lanes/__init__.py:_build_strategy_event:345",
+      "callee": "lanes/ultra.py:emit_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:129",
+      "callee": "audit.py:is_stoploss_override_used",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:139",
+      "callee": "audit.py:mark_stoploss_override_used",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:144",
+      "callee": "audit.py:write_parameter_audit",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:163",
+      "callee": "lanes/bus.py:LaneEvent.from_payload",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:164",
+      "callee": "lanes/bus.py:InMemoryLaneBus.publish",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:165",
+      "callee": "lanes/bus.py:InMemoryLaneBus.consume",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:166",
+      "callee": "lanes/high.py:HighLaneSettings.from_app_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:182",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:193",
+      "callee": "audit.py:is_stoploss_override_used",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:197",
+      "callee": "lanes/bus.py:LaneEvent.from_payload",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:198",
+      "callee": "lanes/bus.py:InMemoryLaneBus.publish",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:201",
+      "callee": "low_subscriber.py:consume_high_decisions_and_publish_low_analysis",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:207",
+      "callee": "lanes/bus.py:InMemoryLaneBus.consume",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:212",
+      "callee": "discipline.py:evaluate_hold_worthiness",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:222",
+      "callee": "discipline.py:build_daily_discipline_plan",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:232",
+      "callee": "ibkr_order_adapter.py:map_decision_to_ibkr_bracket",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:59",
+      "callee": "strategies/loader.py:run_strategies",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle:85",
+      "callee": "low_subscriber.py:get_cached_low_analysis",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "lanes/__init__.py:run_lane_cycle_with_guard:299",
+      "callee": "lanes/ultra.py:emit_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "low_subscriber.py:consume_high_decisions_and_publish_low_analysis:25",
+      "callee": "lanes/bus.py:InMemoryLaneBus.consume_for",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "low_subscriber.py:consume_high_decisions_and_publish_low_analysis:54",
+      "callee": "lanes/bus.py:LaneEvent.from_payload",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "low_subscriber.py:consume_high_decisions_and_publish_low_analysis:55",
+      "callee": "lanes/bus.py:InMemoryLaneBus.publish",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "main.py:main:19",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "main.py:main:29",
+      "callee": "tests/test_llm_gateway.py:FakeClock.sleep",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "non_ai_validation_report.py:_functional_non_ai_checks:114",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "non_ai_validation_report.py:_functional_non_ai_checks:115",
+      "callee": "lanes/__init__.py:run_lane_cycle_with_guard",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "non_ai_validation_report.py:main:200",
+      "callee": "ibkr_execution.py:_parse_args",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "non_ai_validation_report.py:main:204",
+      "callee": "phase0_validation_report.py:_write_json_atomic",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "phase0_validation_report.py:_hard_rule_checks:32",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "phase0_validation_report.py:_hard_rule_checks:32",
+      "callee": "replay.py:_base_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "phase0_validation_report.py:_hard_rule_checks:33",
+      "callee": "replay.py:_base_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "phase0_validation_report.py:_hard_rule_checks:35",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "phase0_validation_report.py:_hard_rule_checks:36",
+      "callee": "replay.py:_base_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "phase0_validation_report.py:_hard_rule_checks:38",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "phase0_validation_report.py:_ibkr_validation:108",
+      "callee": "ibkr_paper_check.py:run_probe",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "phase0_validation_report.py:_ibkr_validation:113",
+      "callee": "ibkr_paper_check.py:run_probe",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "phase0_validation_report.py:_order_checks:59",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "phase0_validation_report.py:_order_checks:59",
+      "callee": "replay.py:_base_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "phase0_validation_report.py:generate_phase0_validation_report:166",
+      "callee": "replay.py:run_replay",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "phase0_validation_report.py:main:198",
+      "callee": "ibkr_execution.py:_parse_args",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "phase0_validation_report.py:main:202",
+      "callee": "non_ai_validation_report.py:_write_json_atomic",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "replay.py:_breaking_news_event:30",
+      "callee": "phase0_validation_report.py:_base_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "replay.py:_high_volatility_event:42",
+      "callee": "phase0_validation_report.py:_base_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "replay.py:_run_duplicate_event_dedup:88",
+      "callee": "lanes/bus.py:LaneEvent.from_payload",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "replay.py:_run_duplicate_event_dedup:89",
+      "callee": "lanes/bus.py:InMemoryLaneBus.publish",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "replay.py:_run_duplicate_event_dedup:90",
+      "callee": "lanes/bus.py:InMemoryLaneBus.publish",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "replay.py:_run_safety_blocked_execution:130",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "replay.py:_run_safety_blocked_execution:131",
+      "callee": "lanes/__init__.py:run_lane_cycle_with_guard",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "replay.py:_run_single:56",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "replay.py:main:202",
+      "callee": "ibkr_execution.py:_parse_args",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_app_health.py:AppHealthTests.test_health_check_returns_lockdown_when_ibkr_unreachable:16",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_app_health.py:AppHealthTests.test_health_check_returns_normal_when_ibkr_reachable:24",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_audit_and_memory_persistence.py:AuditAndMemoryPersistenceTests.test_writes_parameter_audit_and_memory_db:29",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_audit_and_memory_persistence.py:AuditAndMemoryPersistenceTests.test_writes_parameter_audit_and_memory_db:30",
+      "callee": "lanes/__init__.py:run_lane_cycle",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_audit_and_memory_persistence.py:AuditAndMemoryPersistenceTests.test_writes_parameter_audit_and_memory_db:33",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.connect",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_audit_and_memory_persistence.py:AuditAndMemoryPersistenceTests.test_writes_parameter_audit_and_memory_db:37",
+      "callee": "tests/test_ibkr_execution.py:_FakeIB.connect",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_config.py:ConfigTests.test_loads_llm_gateway_related_settings:60",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_config.py:ConfigTests.test_raises_when_retry_rate_is_invalid_float:106",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "tests/test_config.py:ConfigTests.test_raises_when_runtime_mode_is_invalid:111",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "tests/test_discipline_and_ibkr_adapter.py:DisciplineAndIbkrAdapterTests.test_hold_score_and_daily_plan:16",
+      "callee": "discipline.py:evaluate_hold_worthiness",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_discipline_and_ibkr_adapter.py:DisciplineAndIbkrAdapterTests.test_hold_score_and_daily_plan:25",
+      "callee": "discipline.py:build_daily_discipline_plan",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_discipline_and_ibkr_adapter.py:DisciplineAndIbkrAdapterTests.test_ibkr_mapping_uses_stp_and_transmit_chain:35",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_discipline_and_ibkr_adapter.py:DisciplineAndIbkrAdapterTests.test_ibkr_mapping_uses_stp_and_transmit_chain:49",
+      "callee": "ibkr_order_adapter.py:map_decision_to_ibkr_bracket",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_accepts_and_builds_bracket_order:30",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_applies_min_trade_unit_when_risk_budget_is_below_one_share:58",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_applies_strategy_adjustments_with_bounds:143",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_enforces_single_trade_risk_1pct:50",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_generates_unique_client_order_id:109",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_generates_unique_client_order_id:110",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_handles_large_numeric_inputs_stably:137",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_rejects_when_event_kind_is_invalid:104",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_rejects_when_exposure_limit_prevents_integer_shares:82",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_rejects_when_holding_period_exceeded:73",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_rejects_when_settings_boundary_invalid:126",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_rejects_when_source_lane_is_not_ultra:97",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_rejects_when_stop_loss_equals_entry:90",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_rejects_with_cooldown_reason:66",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_respects_configured_holding_days_in_max_hold_until:155",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_high_lane.py:HighLaneRuleEngineTests.test_supports_adjustable_risk_settings:121",
+      "callee": "lanes/high.py:evaluate_event",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_ibkr_execution.py:IbkrExecutionTests.test_execute_cycle_dry_run_returns_signal:117",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_ibkr_execution.py:IbkrExecutionTests.test_execute_cycle_dry_run_returns_signal:118",
+      "callee": "ibkr_execution.py:execute_cycle",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_ibkr_execution.py:IbkrExecutionTests.test_execute_cycle_send_continues_when_single_signal_fails:146",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_ibkr_execution.py:IbkrExecutionTests.test_execute_cycle_send_continues_when_single_signal_fails:168",
+      "callee": "ibkr_execution.py:execute_cycle",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_ibkr_execution.py:IbkrExecutionTests.test_execute_cycle_send_with_injected_client:125",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_ibkr_execution.py:IbkrExecutionTests.test_execute_cycle_send_with_injected_client:136",
+      "callee": "ibkr_execution.py:execute_cycle",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_ibkr_execution.py:IbkrExecutionTests.test_submit_bracket_signal_with_ibkr_semantics:114",
+      "callee": "ibkr_execution.py:ExecutionClient.close",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": false,
+      "风险标注": "未处理返回值"
+    },
+    {
+      "caller": "tests/test_ibkr_execution.py:IbkrExecutionTests.test_submit_bracket_signal_with_ibkr_semantics:75",
+      "callee": "ibkr_execution.py:ExecutionClient.submit_bracket_signal",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_ibkr_paper_check.py:IbkrPaperCheckTests.test_falls_back_when_ibkr_client_errors:101",
+      "callee": "ibkr_paper_check.py:run_probe",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_ibkr_paper_check.py:IbkrPaperCheckTests.test_marks_probe_not_ok_when_news_evidence_missing:123",
+      "callee": "ibkr_paper_check.py:run_probe",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_ibkr_paper_check.py:IbkrPaperCheckTests.test_retries_on_retryable_error_then_succeeds:113",
+      "callee": "ibkr_paper_check.py:run_probe",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_ibkr_paper_check.py:IbkrPaperCheckTests.test_returns_fallback_when_port_unreachable:73",
+      "callee": "ibkr_paper_check.py:run_probe",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_ibkr_paper_check.py:IbkrPaperCheckTests.test_uses_ibkr_data_when_port_ok_and_client_works:83",
+      "callee": "ibkr_paper_check.py:run_probe",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_deduplicates_same_event:19",
+      "callee": "lanes/bus.py:LaneEvent.from_payload",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_deduplicates_same_event:20",
+      "callee": "lanes/bus.py:InMemoryLaneBus.publish",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_deduplicates_same_event:21",
+      "callee": "lanes/bus.py:InMemoryLaneBus.publish",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_deduplicates_same_event:24",
+      "callee": "lanes/bus.py:InMemoryLaneBus.consume",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_eviction_allows_republish_after_capacity_rollover:39",
+      "callee": "lanes/bus.py:LaneEvent.from_payload",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_eviction_allows_republish_after_capacity_rollover:44",
+      "callee": "lanes/bus.py:LaneEvent.from_payload",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_eviction_allows_republish_after_capacity_rollover:49",
+      "callee": "lanes/bus.py:LaneEvent.from_payload",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_eviction_allows_republish_after_capacity_rollover:54",
+      "callee": "lanes/bus.py:InMemoryLaneBus.publish",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_eviction_allows_republish_after_capacity_rollover:55",
+      "callee": "lanes/bus.py:InMemoryLaneBus.publish",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_eviction_allows_republish_after_capacity_rollover:56",
+      "callee": "lanes/bus.py:InMemoryLaneBus.publish",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_eviction_allows_republish_after_capacity_rollover:57",
+      "callee": "lanes/bus.py:InMemoryLaneBus.publish",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_guard_blocks_risk_execution:72",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_guard_blocks_risk_execution:73",
+      "callee": "lanes/__init__.py:run_lane_cycle_with_guard",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_lane_cycle_bypasses_ai_when_disabled:118",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_lane_cycle_bypasses_ai_when_disabled:119",
+      "callee": "lanes/__init__.py:run_lane_cycle",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_lane_cycle_daily_discipline_buy_when_no_position:127",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_lane_cycle_daily_discipline_buy_when_no_position:128",
+      "callee": "lanes/__init__.py:run_lane_cycle",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_lane_cycle_returns_strategy_signals:103",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_lane_cycle_returns_strategy_signals:104",
+      "callee": "lanes/__init__.py:run_lane_cycle",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_lane_cycle_stays_stable_under_repeated_runs:60",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_lane_cycle_stays_stable_under_repeated_runs:63",
+      "callee": "lanes/__init__.py:run_lane_cycle",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_runs_lane_cycle_and_returns_decision:28",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_runs_lane_cycle_and_returns_decision:29",
+      "callee": "lanes/__init__.py:run_lane_cycle",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_seed_event_boolean_block_is_handled:80",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_lane_bus.py:LaneBusTests.test_seed_event_boolean_block_is_handled:81",
+      "callee": "lanes/__init__.py:run_lane_cycle",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_non_ai_validation_report.py:NonAIValidationReportTests.test_generates_non_ai_report:14",
+      "callee": "non_ai_validation_report.py:generate_non_ai_validation_report",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_phase0_validation_report.py:Phase0ValidationReportTests.test_generates_passed_report:14",
+      "callee": "phase0_validation_report.py:generate_phase0_validation_report",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_replay.py:ReplayScriptTests.test_all_mode_runs_fault_injection_matrix:14",
+      "callee": "replay.py:run_replay",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_replay.py:ReplayScriptTests.test_single_mode_runs_only_selected_scenario:28",
+      "callee": "replay.py:run_replay",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_runtime_budget.py:RuntimeBudgetTests.test_eco_mode_uses_conservative_budget:17",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_runtime_budget.py:RuntimeBudgetTests.test_m2_profile_is_detected_on_darwin_arm:36",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_runtime_budget.py:RuntimeBudgetTests.test_perf_mode_uses_higher_parallel_budget:25",
+      "callee": "config.py:load_config",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_safety.py:SafetyTests.test_enters_degraded_when_llm_unreachable:20",
+      "callee": "safety.py:assess_safety",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_safety.py:SafetyTests.test_enters_lockdown_when_ibkr_unreachable:14",
+      "callee": "safety.py:assess_safety",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_safety.py:SafetyTests.test_enters_normal_when_dependencies_ready:26",
+      "callee": "safety.py:assess_safety",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_strategies.py:StrategyPipelineTests.test_ignores_unknown_strategy_name:53",
+      "callee": "strategies/loader.py:run_strategies",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_strategies.py:StrategyPipelineTests.test_loads_and_runs_multiple_strategies:39",
+      "callee": "strategies/loader.py:run_strategies",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    },
+    {
+      "caller": "tests/test_strategies.py:StrategyPipelineTests.test_loads_external_strategy_and_factor_plugins:98",
+      "callee": "strategies/loader.py:run_strategies",
+      "参数传递": "按调用点位置/关键字参数传递",
+      "返回值是否被使用": true,
+      "风险标注": "无"
+    }
+  ],
+  "孤立函数": [
+    "strategies/loader.py:_build_strategy_registry",
+    "strategies/loader.py:_enrich_context_with_factors",
+    "strategies/loader.py:_load_entrypoint_strategies",
+    "strategies/loader.py:_load_entrypoint_factors",
+    "strategies/loader.py:_iter_entry_points",
+    "strategies/loader.py:_load_module_strategies",
+    "strategies/loader.py:_load_module_factors",
+    "strategies/loader.py:_parse_csv",
+    "strategies/library.py:momentum_strategy",
+    "strategies/library.py:mean_reversion_strategy",
+    "strategies/library.py:sector_rotation_strategy",
+    "strategies/library.py:news_sentiment_strategy",
+    "lanes/__init__.py:_parse_enabled_strategies",
+    "lanes/__init__.py:_extract_adjustments",
+    "lanes/__init__.py:_build_strategy_event",
+    "lanes/__init__.py:_signal_to_dict",
+    "lanes/__init__.py:_default_market_snapshot",
+    "lanes/__init__.py:_default_headlines",
+    "lanes/__init__.py:_NonAIUltraSignal.__init__",
+    "lanes/__init__.py:_NonAILowAnalysis.__init__",
+    "lanes/__init__.py:_NonAIHighAdjustment.__init__",
+    "lanes/__init__.py:_NonAIHighAssessment.__init__",
+    "lanes/__init__.py:_non_ai_ultra_signal",
+    "lanes/__init__.py:_non_ai_low_analysis",
+    "lanes/__init__.py:_non_ai_high_adjustment",
+    "lanes/__init__.py:_non_ai_high_assessment",
+    "lanes/__init__.py:_normalize_headlines",
+    "lanes/__init__.py:_default_headline_entries",
+    "lanes/__init__.py:_default_memory_records",
+    "lanes/__init__.py:_current_stop_loss_pct",
+    "lanes/__init__.py:_apply_stop_loss_pct",
+    "lanes/__init__.py:_is_risk_execution_blocked",
+    "lanes/__init__.py:_apply_discipline_gate",
+    "lanes/__init__.py:_discipline_reject",
+    "lanes/__init__.py:_normalize_signal_weights",
+    "lanes/__init__.py:_load_market_snapshot",
+    "lanes/__init__.py:_load_market_snapshot_from_json_env",
+    "lanes/__init__.py:_load_market_snapshot_from_yfinance",
+    "lanes/high.py:_parse_event",
+    "lanes/high.py:_parse_time",
+    "lanes/high.py:_parse_optional_float",
+    "lanes/high.py:_normalize_exposure_to_notional",
+    "lanes/high.py:_check_source",
+    "lanes/high.py:_check_price_structure",
+    "lanes/high.py:_check_cooldown",
+    "lanes/high.py:_check_holding",
+    "lanes/high.py:_check_max_drawdown",
+    "lanes/high.py:_validate_settings_bounds",
+    "lanes/high.py:_build_bracket_order",
+    "lanes/high.py:_rejected",
+    "lanes/high.py:_estimate_transaction_cost",
+    "lanes/bus.py:InMemoryLaneBus.__init__",
+    "lanes/bus.py:_stable_trace_id",
+    "lanes/bus.py:_json_default",
+    "ibkr_execution.py:IbkrExecutionClient.__init__",
+    "ibkr_execution.py:IbkrExecutionClient.submit_bracket_signal",
+    "ibkr_execution.py:IbkrExecutionClient.close",
+    "ibkr_execution.py:_import_ib_insync",
+    "ibkr_execution.py:_trade_to_dict",
+    "ibkr_execution.py:_is_valid_transmit_chain",
+    "ibkr_execution.py:_build_good_after_time",
+    "ibkr_execution.py:_is_within_session_window",
+    "ibkr_execution.py:_parse_hhmm",
+    "ibkr_execution.py:_estimate_signal_cost",
+    "ibkr_execution.py:main",
+    "audit.py:ensure_audit_db",
+    "audit.py:list_recent_audits",
+    "audit.py:dump_audit_snapshot",
+    "safety.py:SafetyState.allows_risk_execution",
+    "phase0_validation_report.py:_hard_rule_checks",
+    "phase0_validation_report.py:_order_checks",
+    "phase0_validation_report.py:_ibkr_validation",
+    "phase0_validation_report.py:main",
+    "non_ai_validation_report.py:_with_pythonpath",
+    "non_ai_validation_report.py:_run_command_check",
+    "non_ai_validation_report.py:_functional_non_ai_checks",
+    "non_ai_validation_report.py:_build_component_status",
+    "non_ai_validation_report.py:_build_potential_issues",
+    "non_ai_validation_report.py:_tail",
+    "non_ai_validation_report.py:_parse_args",
+    "non_ai_validation_report.py:main",
+    "main.py:main",
+    "config.py:_read_int_env",
+    "config.py:_read_float_env",
+    "config.py:_read_bool_env",
+    "replay.py:_breaking_news_event",
+    "replay.py:_high_volatility_event",
+    "replay.py:_run_single",
+    "replay.py:_run_duplicate_event_dedup",
+    "replay.py:_run_unverified_stale_message",
+    "replay.py:_run_safety_blocked_execution",
+    "replay.py:_parse_args",
+    "replay.py:main",
+    "ibkr_paper_check.py:MarketDataClient.request_l1_snapshot",
+    "ibkr_paper_check.py:MarketDataClient.request_news",
+    "ibkr_paper_check.py:MarketDataClient.close",
+    "ibkr_paper_check.py:PortStatus.to_dict",
+    "ibkr_paper_check.py:IbkrInsyncClient.__init__",
+    "ibkr_paper_check.py:IbkrInsyncClient.request_l1_snapshot",
+    "ibkr_paper_check.py:IbkrInsyncClient.request_news",
+    "ibkr_paper_check.py:IbkrInsyncClient.close",
+    "ibkr_paper_check.py:check_port",
+    "ibkr_paper_check.py:fetch_yfinance_snapshot",
+    "ibkr_paper_check.py:_append_critical_path_log",
+    "ibkr_paper_check.py:_append_alert",
+    "ibkr_paper_check.py:_is_retryable_probe_exception",
+    "ibkr_paper_check.py:_build_pass_evidence",
+    "ibkr_paper_check.py:_parse_args",
+    "ibkr_paper_check.py:main",
+    "tests/test_ai_layers.py:AILayersTests.test_ultra_guard_rejects_stale_or_unverified_message",
+    "tests/test_ai_layers.py:AILayersTests.test_ultra_guard_fast_filter_blocks_on_weak_local_metrics",
+    "tests/test_ai_layers.py:AILayersTests.test_low_lane_committee_requires_two_of_three",
+    "tests/test_ai_layers.py:AILayersTests.test_high_adjustment_obeys_single_stoploss_override",
+    "tests/test_ai_layers.py:AILayersTests.test_high_assessment_supports_local_or_cloud_mode",
+    "tests/test_ai_layers.py:AILayersTests.test_layered_memory_returns_relevant_records",
+    "tests/test_ai_layers.py:AILayersTests.test_persistent_memory_store_loads_from_disk",
+    "tests/test_app_health.py:AppHealthTests.test_health_check_returns_lockdown_when_ibkr_unreachable",
+    "tests/test_app_health.py:AppHealthTests.test_health_check_returns_normal_when_ibkr_reachable",
+    "tests/test_app_health.py:AppHealthTests._DummySocket.__enter__",
+    "tests/test_app_health.py:AppHealthTests._DummySocket.__exit__",
+    "tests/test_audit_and_memory_persistence.py:AuditAndMemoryPersistenceTests.test_writes_parameter_audit_and_memory_db",
+    "tests/test_config.py:ConfigTests.test_loads_llm_gateway_related_settings",
+    "tests/test_config.py:ConfigTests.test_raises_when_retry_rate_is_invalid_float",
+    "tests/test_config.py:ConfigTests.test_raises_when_runtime_mode_is_invalid",
+    "tests/test_discipline_and_ibkr_adapter.py:DisciplineAndIbkrAdapterTests.test_hold_score_and_daily_plan",
+    "tests/test_discipline_and_ibkr_adapter.py:DisciplineAndIbkrAdapterTests.test_ibkr_mapping_uses_stp_and_transmit_chain",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.setUp",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_accepts_and_builds_bracket_order",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_enforces_single_trade_risk_1pct",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_applies_min_trade_unit_when_risk_budget_is_below_one_share",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_rejects_with_cooldown_reason",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_rejects_when_holding_period_exceeded",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_rejects_when_exposure_limit_prevents_integer_shares",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_rejects_when_stop_loss_equals_entry",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_rejects_when_source_lane_is_not_ultra",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_rejects_when_event_kind_is_invalid",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_generates_unique_client_order_id",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_supports_adjustable_risk_settings",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_rejects_when_settings_boundary_invalid",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_handles_large_numeric_inputs_stably",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_applies_strategy_adjustments_with_bounds",
+    "tests/test_high_lane.py:HighLaneRuleEngineTests.test_respects_configured_holding_days_in_max_hold_until",
+    "tests/test_ibkr_execution.py:_FakeOrder.__init__",
+    "tests/test_ibkr_execution.py:_FakeTrade.__init__",
+    "tests/test_ibkr_execution.py:_FakeIB.__init__",
+    "tests/test_ibkr_execution.py:_fake_stock",
+    "tests/test_ibkr_execution.py:IbkrExecutionTests.test_submit_bracket_signal_with_ibkr_semantics",
+    "tests/test_ibkr_execution.py:IbkrExecutionTests.test_execute_cycle_dry_run_returns_signal",
+    "tests/test_ibkr_execution.py:IbkrExecutionTests.test_execute_cycle_send_with_injected_client",
+    "tests/test_ibkr_execution.py:IbkrExecutionTests._FakeExecClient.close",
+    "tests/test_ibkr_execution.py:IbkrExecutionTests.test_execute_cycle_send_continues_when_single_signal_fails",
+    "tests/test_ibkr_execution.py:IbkrExecutionTests._FlakyExecClient.__init__",
+    "tests/test_ibkr_execution.py:IbkrExecutionTests._FlakyExecClient.submit_bracket_signal",
+    "tests/test_ibkr_execution.py:IbkrExecutionTests._FlakyExecClient.close",
+    "tests/test_ibkr_paper_check.py:FakeClientSuccess.request_l1_snapshot",
+    "tests/test_ibkr_paper_check.py:FakeClientSuccess.request_news",
+    "tests/test_ibkr_paper_check.py:FakeClientSuccess.close",
+    "tests/test_ibkr_paper_check.py:FakeClientFailure.request_l1_snapshot",
+    "tests/test_ibkr_paper_check.py:FakeClientFailure.request_news",
+    "tests/test_ibkr_paper_check.py:FakeClientFailure.close",
+    "tests/test_ibkr_paper_check.py:FakeClientNoNews.request_l1_snapshot",
+    "tests/test_ibkr_paper_check.py:FakeClientNoNews.request_news",
+    "tests/test_ibkr_paper_check.py:FakeClientNoNews.close",
+    "tests/test_ibkr_paper_check.py:FlakyClient.__init__",
+    "tests/test_ibkr_paper_check.py:FlakyClient.request_l1_snapshot",
+    "tests/test_ibkr_paper_check.py:FlakyClient.request_news",
+    "tests/test_ibkr_paper_check.py:FlakyClient.close",
+    "tests/test_ibkr_paper_check.py:IbkrPaperCheckTests.setUp",
+    "tests/test_ibkr_paper_check.py:IbkrPaperCheckTests.test_returns_fallback_when_port_unreachable",
+    "tests/test_ibkr_paper_check.py:IbkrPaperCheckTests.test_uses_ibkr_data_when_port_ok_and_client_works",
+    "tests/test_ibkr_paper_check.py:IbkrPaperCheckTests.test_falls_back_when_ibkr_client_errors",
+    "tests/test_ibkr_paper_check.py:IbkrPaperCheckTests.test_retries_on_retryable_error_then_succeeds",
+    "tests/test_ibkr_paper_check.py:IbkrPaperCheckTests.test_marks_probe_not_ok_when_news_evidence_missing",
+    "tests/test_lane_bus.py:LaneBusTests.test_deduplicates_same_event",
+    "tests/test_lane_bus.py:LaneBusTests.test_runs_lane_cycle_and_returns_decision",
+    "tests/test_lane_bus.py:LaneBusTests.test_eviction_allows_republish_after_capacity_rollover",
+    "tests/test_lane_bus.py:LaneBusTests.test_lane_cycle_stays_stable_under_repeated_runs",
+    "tests/test_lane_bus.py:LaneBusTests.test_guard_blocks_risk_execution",
+    "tests/test_lane_bus.py:LaneBusTests.test_seed_event_boolean_block_is_handled",
+    "tests/test_lane_bus.py:LaneBusTests.test_lane_cycle_returns_strategy_signals",
+    "tests/test_lane_bus.py:LaneBusTests.test_lane_cycle_bypasses_ai_when_disabled",
+    "tests/test_lane_bus.py:LaneBusTests.test_lane_cycle_daily_discipline_buy_when_no_position",
+    "tests/test_llm_connectivity_check.py:FakeGateway.__init__",
+    "tests/test_llm_connectivity_check.py:FakeGateway.check_connectivity",
+    "tests/test_llm_connectivity_check.py:LLMConnectivityCheckTests.test_run_probe_returns_success_report",
+    "tests/test_llm_connectivity_check.py:LLMConnectivityCheckTests.test_run_probe_returns_structured_error",
+    "tests/test_llm_gateway.py:FakeCompletions.__init__",
+    "tests/test_llm_gateway.py:FakeCompletions.create",
+    "tests/test_llm_gateway.py:FakeChat.__init__",
+    "tests/test_llm_gateway.py:FakeClient.__init__",
+    "tests/test_llm_gateway.py:FakeResponse.__init__",
+    "tests/test_llm_gateway.py:FakeClock.__init__",
+    "tests/test_llm_gateway.py:FakeClock.__call__",
+    "tests/test_llm_gateway.py:LLMGatewayTests.setUp",
+    "tests/test_llm_gateway.py:LLMGatewayTests.test_uses_local_model_for_non_cloud_profile",
+    "tests/test_llm_gateway.py:LLMGatewayTests.test_retries_on_retryable_error_and_succeeds",
+    "tests/test_llm_gateway.py:LLMGatewayTests.test_raises_without_retry_for_non_retryable_error",
+    "tests/test_llm_gateway.py:LLMGatewayTests.test_rate_limiter_waits_for_next_permit",
+    "tests/test_low_lane.py:LowLaneRotationTests.test_build_watchlist_with_rotation_ranks_symbols",
+    "tests/test_non_ai_validation_report.py:NonAIValidationReportTests.test_generates_non_ai_report",
+    "tests/test_phase0_validation_report.py:Phase0ValidationReportTests.test_generates_passed_report",
+    "tests/test_replay.py:ReplayScriptTests.test_all_mode_runs_fault_injection_matrix",
+    "tests/test_replay.py:ReplayScriptTests.test_single_mode_runs_only_selected_scenario",
+    "tests/test_runtime_budget.py:RuntimeBudgetTests.test_eco_mode_uses_conservative_budget",
+    "tests/test_runtime_budget.py:RuntimeBudgetTests.test_perf_mode_uses_higher_parallel_budget",
+    "tests/test_runtime_budget.py:RuntimeBudgetTests.test_m2_profile_is_detected_on_darwin_arm",
+    "tests/test_safety.py:SafetyTests.test_enters_lockdown_when_ibkr_unreachable",
+    "tests/test_safety.py:SafetyTests.test_enters_degraded_when_llm_unreachable",
+    "tests/test_safety.py:SafetyTests.test_enters_normal_when_dependencies_ready",
+    "tests/test_strategies.py:StrategyPipelineTests.test_loads_and_runs_multiple_strategies",
+    "tests/test_strategies.py:StrategyPipelineTests.test_ignores_unknown_strategy_name",
+    "tests/test_strategies.py:StrategyPipelineTests.test_loads_external_strategy_and_factor_plugins"
+  ],
+  "循环调用": [],
+  "统计": {
+    "总调用关系数": 160,
+    "风险调用数": 22,
+    "孤立函数数": 212
+  }
+}
