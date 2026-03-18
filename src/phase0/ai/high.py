@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timezone
 from ..llm_gateway import UnifiedLLMGateway
 from ..config import AppConfig
 import ast
@@ -8,6 +9,11 @@ import json
 import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable
+
+from pydantic import ValidationError
+
+from ..models.signals import HighDecisionEvent, UltraSignalEvent
+from ..state_store import get_latest_low_analysis_state
 
 if TYPE_CHECKING:
     from ..lanes.bus import AsyncEventBus
@@ -47,7 +53,6 @@ async def start_high_engine(
     market_snapshot: dict[str, dict[str, float | str]],
 ) -> None:
     from ..lanes.bus import LaneEvent
-    from ..lanes.low_subscriber import get_cached_low_analysis
     
     logger.info("Starting HighEngine Daemon...")
     queue = bus.subscribe("ultra.signal")
@@ -64,20 +69,43 @@ async def start_high_engine(
         while True:
             event = await queue.get()
             try:
-                payload = event.payload
-                symbol = payload.get("symbol", "")
-                
-                logger.info(f"HighEngine: Received ultra signal for {symbol}, processing...")
-                
-                low_analysis = get_cached_low_analysis(symbol)
-                low_approved = getattr(low_analysis, "committee_approved", False) if low_analysis else False
+                ultra_signal = UltraSignalEvent.model_validate(event.payload)
+                symbol = ultra_signal.symbol.upper()
+                logger.info("HighEngine: Received ultra signal for %s, processing...", symbol)
+                low_state = get_latest_low_analysis_state(config.ai_state_db_path, symbol=symbol)
+                if low_state is None:
+                    unavailable_decision = HighDecisionEvent(
+                        symbol=symbol,
+                        approved=False,
+                        risk_multiplier=1.0,
+                        stop_loss_pct=config.ai_stop_loss_default_pct,
+                        reason="LOW_ANALYSIS_UNAVAILABLE",
+                        ultra_signal=ultra_signal,
+                        decision_ts=datetime.now(tz=timezone.utc),
+                    )
+                    decision_event = LaneEvent.from_payload(
+                        event_type="decision",
+                        source_lane="high",
+                        payload=unavailable_decision.model_dump(mode="json"),
+                    )
+                    bus.publish("high.decision", decision_event)
+                    continue
+
+                analysis_payload = dict(low_state.get("analysis", {}) or {})
+                low_approved = bool(analysis_payload.get("committee_approved", False))
 
                 assessment = await assess_high_lane_async(
-                    strategy_name=str(payload.get("strategy", "unknown")),
-                    strategy_confidence=float(payload.get("confidence", 0.8)),
+                    strategy_name=str(ultra_signal.raw_data.get("strategy", ultra_signal.event_type)),
+                    strategy_confidence=float(
+                        ultra_signal.raw_data.get("strategy_confidence", ultra_signal.confidence_score)
+                    ),
                     low_committee_approved=low_approved,
-                    ultra_authenticity_score=float(payload.get("authenticity_score", 1.0)),
-                    quick_filter_score=float(payload.get("quick_filter_score", 1.0)),
+                    ultra_authenticity_score=float(
+                        ultra_signal.raw_data.get("authenticity_score", ultra_signal.confidence_score)
+                    ),
+                    quick_filter_score=float(
+                        ultra_signal.raw_data.get("quick_filter_score", ultra_signal.confidence_score)
+                    ),
                     high_confidence_gate=config.ai_high_confidence_gate,
                     current_stop_loss_pct=config.ai_stop_loss_default_pct,
                     stop_loss_override_used=False,
@@ -88,20 +116,27 @@ async def start_high_engine(
                     committee_min_support=config.ai_high_committee_min_support,
                     llm_gateway=llm_gateway,
                 )
-                
-                decision_payload = {
-                    "symbol": symbol,
-                    "approved": assessment.decision.approved,
-                    "risk_multiplier": assessment.decision.risk_multiplier,
-                    "stop_loss_pct": assessment.decision.stop_loss_pct,
-                    "reason": assessment.decision.reason,
-                    "ultra_signal": payload,
-                }
-                decision_event = LaneEvent.from_payload(event_type="decision", source_lane="high", payload=decision_payload)
+
+                decision_payload = HighDecisionEvent(
+                    symbol=symbol,
+                    approved=assessment.decision.approved,
+                    risk_multiplier=assessment.decision.risk_multiplier,
+                    stop_loss_pct=assessment.decision.stop_loss_pct,
+                    reason=assessment.decision.reason,
+                    ultra_signal=ultra_signal,
+                    decision_ts=datetime.now(tz=timezone.utc),
+                )
+                decision_event = LaneEvent.from_payload(
+                    event_type="decision",
+                    source_lane="high",
+                    payload=decision_payload.model_dump(mode="json"),
+                )
                 bus.publish("high.decision", decision_event)
                 
-            except Exception as e:
-                logger.error(f"HighEngine: Error processing event: {e}")
+            except ValidationError as exc:
+                logger.error("HighEngine: Invalid event contract: %s", str(exc))
+            except Exception as exc:
+                logger.error("HighEngine: Error processing event: %s", str(exc))
             finally:
                 queue.task_done()
     except asyncio.CancelledError:

@@ -165,6 +165,16 @@ def ensure_trade_state_db(db_path: str) -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS low_analysis_state (
+                symbol TEXT PRIMARY KEY,
+                analysis_json TEXT NOT NULL,
+                analyzed_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
         conn.commit()
 
 
@@ -229,6 +239,73 @@ def get_runtime_state(db_path: str) -> RuntimeState:
         kill_switch_active=bool(payload.get("kill_switch_active", False)),
         equity=max(0.0, float(payload.get("equity", 0.0) or 0.0)),
     )
+
+
+def upsert_low_analysis_state(
+    db_path: str,
+    *,
+    symbol: str,
+    analysis: dict[str, Any],
+    analyzed_at: str | None = None,
+) -> None:
+    ensure_trade_state_db(db_path)
+    symbol_key = symbol.strip().upper()
+    if not symbol_key:
+        return
+    now = datetime.now(tz=timezone.utc).isoformat()
+    ts = analyzed_at or now
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """
+            INSERT INTO low_analysis_state(symbol, analysis_json, analyzed_at, updated_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(symbol) DO UPDATE SET
+                analysis_json=excluded.analysis_json,
+                analyzed_at=excluded.analyzed_at,
+                updated_at=excluded.updated_at
+            """,
+            (
+                symbol_key,
+                json.dumps(analysis, ensure_ascii=False),
+                ts,
+                now,
+            ),
+        )
+        conn.commit()
+
+
+def get_latest_low_analysis_state(db_path: str, *, symbol: str) -> dict[str, Any] | None:
+    ensure_trade_state_db(db_path)
+    symbol_key = symbol.strip().upper()
+    candidates = [symbol_key] if symbol_key else []
+    if "MACRO" not in candidates:
+        candidates.append("MACRO")
+    with sqlite3.connect(db_path) as conn:
+        for key in candidates:
+            row = conn.execute(
+                """
+                SELECT symbol, analysis_json, analyzed_at, updated_at
+                FROM low_analysis_state
+                WHERE symbol = ?
+                LIMIT 1
+                """,
+                (key,),
+            ).fetchone()
+            if row is None:
+                continue
+            try:
+                payload = json.loads(str(row[1]))
+            except json.JSONDecodeError:
+                payload = {}
+            if not isinstance(payload, dict):
+                payload = {}
+            return {
+                "symbol": str(row[0]).upper(),
+                "analysis": payload,
+                "analyzed_at": str(row[2]),
+                "updated_at": str(row[3]),
+            }
+    return None
 
 
 def is_idempotency_key_seen(db_path: str, idempotency_key: str) -> bool:

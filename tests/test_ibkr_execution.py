@@ -9,7 +9,13 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from phase0.config import load_config
-from phase0.ibkr_execution import ExecutionConfig, IbkrExecutionClient, _build_idempotency_key, _parse_hhmm, execute_cycle
+from phase0.ibkr_execution import (
+    ExecutionConfig,
+    IbkrExecutionClient,
+    _build_idempotency_key,
+    _parse_hhmm,
+    execute_cycle,
+)
 from phase0.state_store import get_runtime_state, list_execution_reports, set_system_status
 
 
@@ -293,6 +299,17 @@ class IbkrExecutionTests(unittest.TestCase):
         self.assertIn("post_submit_error", report["executions"][0])
         persisted = list_execution_reports(self._db_path, limit=1)
         self.assertEqual("runtime", persisted[0]["post_submit_error"]["category"])
+
+    def test_execute_cycle_routes_through_unified_control_plane(self) -> None:
+        config = load_config()
+        expected = {"kind": "phase0_ibkr_execution", "via": "unified", "executions": []}
+        with patch("phase0.ibkr_execution.run_lane_cycle", return_value={"ibkr_order_signals": []}), patch(
+            "phase0.ibkr_execution.execute_intents_with_control_plane",
+            return_value=expected,
+        ) as mocked_unified:
+            report = execute_cycle(symbol="AAPL", config=config, send=False)
+        self.assertEqual(expected, report)
+        mocked_unified.assert_called_once()
 
 
 if __name__ == "__main__":

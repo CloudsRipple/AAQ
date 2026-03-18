@@ -11,6 +11,8 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any
 
+from ..state_store import upsert_low_analysis_state
+
 if TYPE_CHECKING:
     from ..lanes.bus import AsyncEventBus
 
@@ -59,11 +61,8 @@ async def start_low_engine(
                 strategy_confidence=1.0,
                 llm_gateway=llm_gateway,
             )
-            # You would save this analysis to a state store here.
-            # Currently we publish it to the bus to mimic old behavior
-            output = {
-                "lane": "low",
-                "symbol": "MACRO",
+            analyzed_at = datetime.now(tz=timezone.utc).isoformat()
+            analysis_payload = {
                 "preferred_sector": analysis.preferred_sector,
                 "strategy_fit": analysis.strategy_fit,
                 "sector_allocation": analysis.sector_allocation,
@@ -72,7 +71,29 @@ async def start_low_engine(
                     {"model": vote.model, "support": vote.support, "score": vote.score}
                     for vote in analysis.committee_votes
                 ],
-                "analyzed_at": datetime.now(tz=timezone.utc).isoformat(),
+            }
+            upsert_low_analysis_state(
+                config.ai_state_db_path,
+                symbol="MACRO",
+                analysis=analysis_payload,
+                analyzed_at=analyzed_at,
+            )
+            for symbol in market_snapshot.keys():
+                upsert_low_analysis_state(
+                    config.ai_state_db_path,
+                    symbol=symbol,
+                    analysis=analysis_payload,
+                    analyzed_at=analyzed_at,
+                )
+            output = {
+                "lane": "low",
+                "symbol": "MACRO",
+                "preferred_sector": analysis.preferred_sector,
+                "strategy_fit": analysis.strategy_fit,
+                "sector_allocation": analysis.sector_allocation,
+                "committee_approved": analysis.committee_approved,
+                "committee_votes": analysis_payload["committee_votes"],
+                "analyzed_at": analyzed_at,
             }
             from ..lanes.bus import LaneEvent
             low_event = LaneEvent.from_payload(event_type="analysis", source_lane="low", payload=output)

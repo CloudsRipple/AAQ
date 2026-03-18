@@ -294,7 +294,6 @@ def execute_cycle(
             "blocked_reason": "KILL_SWITCH_ACTIVE",
         }
     lane_output = run_lane_cycle(symbol=symbol, config=config, daily_state=daily_state)
-    signals = lane_output.get("ibkr_order_signals", [])
     set_runtime_state(
         state_db_path,
         drawdown=_read_current_drawdown_pct(),
@@ -303,8 +302,42 @@ def execute_cycle(
         kill_switch_active=runtime.kill_switch_active,
         equity=runtime.equity,
     )
+    return execute_intents_with_control_plane(
+        symbol=symbol,
+        intents=list(lane_output.get("ibkr_order_signals", []) or []),
+        lane_output=lane_output,
+        config=config,
+        send=send,
+        client_factory=client_factory,
+    )
+
+
+def execute_intents_with_control_plane(
+    *,
+    symbol: str,
+    intents: list[dict[str, Any]],
+    lane_output: dict[str, Any],
+    config: AppConfig,
+    send: bool,
+    client_factory: Callable[[ExecutionConfig], ExecutionClient] | None = None,
+) -> dict[str, Any]:
+    state_db_path = config.ai_state_db_path
+    ensure_trade_state_db(state_db_path)
+    runtime = get_runtime_state(state_db_path)
+    if runtime.kill_switch_active and send:
+        status = get_system_status(state_db_path)
+        return {
+            "kind": "phase0_ibkr_execution",
+            "symbol": symbol.upper(),
+            "send_enabled": send,
+            "signals_count": 0,
+            "lane": lane_output,
+            "executions": [],
+            "system_state": status,
+            "blocked_reason": "KILL_SWITCH_ACTIVE",
+        }
     risk_report = evaluate_order_intents(
-        intents=list(signals),
+        intents=list(intents),
         config=config,
         lane_output=lane_output,
     )
@@ -356,131 +389,11 @@ def execute_cycle(
                     "reconcile": reconcile,
                 }
             set_system_status(state_db_path, SYSTEM_STATUS_RUNNING, "RECONCILE_PASSED")
-            for signal in signals:
-                idempotency = _build_idempotency_key(signal)
-                if is_idempotency_key_seen(state_db_path, idempotency["idempotency_key"]):
-                    executions.append(
-                        {
-                            "ok": True,
-                            "deduplicated": True,
-                            "idempotency_key": idempotency["idempotency_key"],
-                            "signal": signal,
-                        }
-                    )
-                    continue
-                inserted = register_idempotency_key(
-                    state_db_path,
-                    idempotency_key=idempotency["idempotency_key"],
-                    strategy_id=idempotency["strategy_id"],
-                    symbol=idempotency["symbol"],
-                    signal_ts=idempotency["signal_ts"],
-                    side=idempotency["side"],
-                    status=ORDER_STATUS_NEW,
-                )
-                if not inserted:
-                    executions.append(
-                        {
-                            "ok": True,
-                            "deduplicated": True,
-                            "idempotency_key": idempotency["idempotency_key"],
-                            "signal": signal,
-                        }
-                    )
-                    continue
-                try:
-                    execution_result: dict[str, Any] | None = None
-                    update_idempotency_status(
-                        state_db_path,
-                        idempotency_key=idempotency["idempotency_key"],
-                        status=ORDER_STATUS_SENT,
-                    )
-                    started = perf_counter()
-                    execution_result = submit_with_retry(
-                        submit_fn=client.submit_bracket_signal,
-                        signal=signal,
-                        max_attempts=max(1, int(os.getenv("EXEC_MAX_RETRY_ATTEMPTS", "3"))),
-                        base_backoff_seconds=max(0.0, float(os.getenv("EXEC_RETRY_BASE_BACKOFF_SECONDS", "0.2"))),
-                    )
-                    execution_result["latency_ms"] = round((perf_counter() - started) * 1000.0, 3)
-                    execution_result["idempotency_key"] = idempotency["idempotency_key"]
-                    executions.append(execution_result)
-                    if execution_result.get("ok"):
-                        lifecycle = process_execution_report(
-                            db_path=state_db_path,
-                            signal=signal,
-                            execution_result=execution_result,
-                        )
-                        apply_order_report(
-                            state_db_path,
-                            symbol=idempotency["symbol"],
-                            side=idempotency["side"],
-                            report_orders=list(execution_result.get("orders", []) or []),
-                        )
-                        execution_result["lifecycle"] = lifecycle
-                        final_status = ORDER_STATUS_ACK
-                        if lifecycle.get("rejected", False):
-                            final_status = "REJECTED"
-                            _apply_reject_recovery(state_db_path=state_db_path, runtime=get_runtime_state(state_db_path))
-                        if lifecycle.get("atomicity", {}).get("needs_emergency", False):
-                            emergency = client.activate_kill_switch()
-                            execution_result["emergency"] = emergency
-                            final_status = "EMERGENCY_KILL_SWITCH"
-                            set_system_status(state_db_path, SYSTEM_STATUS_DEGRADED, "PROTECTION_LEG_MISSING")
-                        update_idempotency_status(
-                            state_db_path,
-                            idempotency_key=idempotency["idempotency_key"],
-                            status=final_status,
-                        )
-                        save_execution_report(
-                            state_db_path,
-                            idempotency_key=idempotency["idempotency_key"],
-                            report=execution_result,
-                        )
-                    else:
-                        update_idempotency_status(
-                            state_db_path,
-                            idempotency_key=idempotency["idempotency_key"],
-                            status="FAILED",
-                        )
-                        save_execution_report(
-                            state_db_path,
-                            idempotency_key=idempotency["idempotency_key"],
-                            report=execution_result,
-                        )
-                except Exception as exc:
-                    if execution_result is not None and bool(execution_result.get("ok", False)):
-                        update_idempotency_status(
-                            state_db_path,
-                            idempotency_key=idempotency["idempotency_key"],
-                            status=ORDER_STATUS_ACK,
-                        )
-                        execution_result["post_submit_error"] = {
-                            "error": exc.__class__.__name__,
-                            "message": str(exc),
-                            "category": _classify_execution_error(exc),
-                        }
-                        save_execution_report(
-                            state_db_path,
-                            idempotency_key=idempotency["idempotency_key"],
-                            report=execution_result,
-                        )
-                        continue
-                    update_idempotency_status(
-                        state_db_path,
-                        idempotency_key=idempotency["idempotency_key"],
-                        status="FAILED",
-                    )
-                    executions.append(
-                        {
-                            "ok": False,
-                            "error": exc.__class__.__name__,
-                            "message": str(exc),
-                            "error_category": _classify_execution_error(exc),
-                            "latency_ms": 0.0,
-                            "idempotency_key": idempotency["idempotency_key"],
-                            "signal": signal,
-                        }
-                    )
+            executions = _execute_approved_intents(
+                signals=signals,
+                state_db_path=state_db_path,
+                client=client,
+            )
             if any(not item.get("ok", False) for item in executions):
                 set_system_status(state_db_path, SYSTEM_STATUS_DEGRADED, "PARTIAL_EXECUTION_FAILURE")
         finally:
@@ -536,6 +449,141 @@ def execute_cycle(
         alerts_count=len(alerts),
     )
     return cycle_report
+
+
+def _execute_approved_intents(
+    *,
+    signals: list[dict[str, Any]],
+    state_db_path: str,
+    client: ExecutionClient,
+) -> list[dict[str, Any]]:
+    executions: list[dict[str, Any]] = []
+    for signal in signals:
+        idempotency = _build_idempotency_key(signal)
+        if is_idempotency_key_seen(state_db_path, idempotency["idempotency_key"]):
+            executions.append(
+                {
+                    "ok": True,
+                    "deduplicated": True,
+                    "idempotency_key": idempotency["idempotency_key"],
+                    "signal": signal,
+                }
+            )
+            continue
+        inserted = register_idempotency_key(
+            state_db_path,
+            idempotency_key=idempotency["idempotency_key"],
+            strategy_id=idempotency["strategy_id"],
+            symbol=idempotency["symbol"],
+            signal_ts=idempotency["signal_ts"],
+            side=idempotency["side"],
+            status=ORDER_STATUS_NEW,
+        )
+        if not inserted:
+            executions.append(
+                {
+                    "ok": True,
+                    "deduplicated": True,
+                    "idempotency_key": idempotency["idempotency_key"],
+                    "signal": signal,
+                }
+            )
+            continue
+        try:
+            execution_result: dict[str, Any] | None = None
+            update_idempotency_status(
+                state_db_path,
+                idempotency_key=idempotency["idempotency_key"],
+                status=ORDER_STATUS_SENT,
+            )
+            started = perf_counter()
+            execution_result = submit_with_retry(
+                submit_fn=client.submit_bracket_signal,
+                signal=signal,
+                max_attempts=max(1, int(os.getenv("EXEC_MAX_RETRY_ATTEMPTS", "3"))),
+                base_backoff_seconds=max(0.0, float(os.getenv("EXEC_RETRY_BASE_BACKOFF_SECONDS", "0.2"))),
+            )
+            execution_result["latency_ms"] = round((perf_counter() - started) * 1000.0, 3)
+            execution_result["idempotency_key"] = idempotency["idempotency_key"]
+            executions.append(execution_result)
+            if execution_result.get("ok"):
+                lifecycle = process_execution_report(
+                    db_path=state_db_path,
+                    signal=signal,
+                    execution_result=execution_result,
+                )
+                apply_order_report(
+                    state_db_path,
+                    symbol=idempotency["symbol"],
+                    side=idempotency["side"],
+                    report_orders=list(execution_result.get("orders", []) or []),
+                )
+                execution_result["lifecycle"] = lifecycle
+                final_status = ORDER_STATUS_ACK
+                if lifecycle.get("rejected", False):
+                    final_status = "REJECTED"
+                    _apply_reject_recovery(state_db_path=state_db_path, runtime=get_runtime_state(state_db_path))
+                if lifecycle.get("atomicity", {}).get("needs_emergency", False):
+                    emergency = client.activate_kill_switch()
+                    execution_result["emergency"] = emergency
+                    final_status = "EMERGENCY_KILL_SWITCH"
+                    set_system_status(state_db_path, SYSTEM_STATUS_DEGRADED, "PROTECTION_LEG_MISSING")
+                update_idempotency_status(
+                    state_db_path,
+                    idempotency_key=idempotency["idempotency_key"],
+                    status=final_status,
+                )
+                save_execution_report(
+                    state_db_path,
+                    idempotency_key=idempotency["idempotency_key"],
+                    report=execution_result,
+                )
+            else:
+                update_idempotency_status(
+                    state_db_path,
+                    idempotency_key=idempotency["idempotency_key"],
+                    status="FAILED",
+                )
+                save_execution_report(
+                    state_db_path,
+                    idempotency_key=idempotency["idempotency_key"],
+                    report=execution_result,
+                )
+        except Exception as exc:
+            if execution_result is not None and bool(execution_result.get("ok", False)):
+                update_idempotency_status(
+                    state_db_path,
+                    idempotency_key=idempotency["idempotency_key"],
+                    status=ORDER_STATUS_ACK,
+                )
+                execution_result["post_submit_error"] = {
+                    "error": exc.__class__.__name__,
+                    "message": str(exc),
+                    "category": _classify_execution_error(exc),
+                }
+                save_execution_report(
+                    state_db_path,
+                    idempotency_key=idempotency["idempotency_key"],
+                    report=execution_result,
+                )
+                continue
+            update_idempotency_status(
+                state_db_path,
+                idempotency_key=idempotency["idempotency_key"],
+                status="FAILED",
+            )
+            executions.append(
+                {
+                    "ok": False,
+                    "error": exc.__class__.__name__,
+                    "message": str(exc),
+                    "error_category": _classify_execution_error(exc),
+                    "latency_ms": 0.0,
+                    "idempotency_key": idempotency["idempotency_key"],
+                    "signal": signal,
+                }
+            )
+    return executions
 
 
 def execute_kill_switch(
