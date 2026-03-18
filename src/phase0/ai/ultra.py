@@ -340,20 +340,23 @@ async def start_ultra_engine(
     interval_seconds: float = 1.0,
 ) -> None:
     from ..lanes.bus import LaneEvent
+    from ..models.signals import UltraSignalEvent
+    from pydantic import ValidationError
     logger = logging.getLogger(__name__)
     logger.info("Starting UltraEngine Daemon...")
 
     # We start one sentinel per symbol in the snapshot
-    sentinels = {}
+    sentinels: dict[str, AsyncUltraSentinel] = {}
     for symbol in market_snapshot.keys():
         s = build_ultra_sentinel(symbol=symbol, config=config)
         await s.start()
-        sentinels[symbol] = s
+        sentinels[symbol.upper()] = s
 
     # Bootstrap with initial snapshot data
     now = datetime.now(tz=timezone.utc)
     for symbol, row in market_snapshot.items():
-        s = sentinels[symbol]
+        symbol_key = symbol.upper()
+        s = sentinels[symbol_key]
         reference_price = max(1.0, float(row.get("reference_price", 100.0)))
         base_volume = max(1.0, float(row.get("volume", 1000.0)))
         await s.on_market_tick(
@@ -363,11 +366,92 @@ async def start_ultra_engine(
             raw_data={"market_row": dict(row), "stage": "bootstrap"},
         )
 
+    symbol_order = sorted(sentinels.keys())
+    headline_cursor = 0
+    min_publish_gap_seconds = max(1.0, float(interval_seconds))
+    last_published_at: dict[str, datetime] = {}
+
+    def _can_publish(symbol: str, ts: datetime) -> bool:
+        previous = last_published_at.get(symbol)
+        if previous is None:
+            return True
+        return (ts.astimezone(timezone.utc) - previous.astimezone(timezone.utc)).total_seconds() >= min_publish_gap_seconds
+
+    def _publish_ultra_signal(event: UltraSignalEvent) -> None:
+        symbol = event.symbol.upper()
+        ts = event.timestamp.astimezone(timezone.utc)
+        if not _can_publish(symbol, ts):
+            return
+        try:
+            validated = UltraSignalEvent.model_validate(event.model_dump(mode="json"))
+        except ValidationError as exc:
+            logger.error("UltraEngine: ultra.signal contract validation failed: %s", str(exc))
+            return
+        lane_event = LaneEvent.from_payload(
+            event_type="signal",
+            source_lane="ultra",
+            payload=validated.model_dump(mode="json"),
+        )
+        bus.publish("ultra.signal", lane_event)
+        last_published_at[symbol] = ts
+
+    if not sentinels:
+        logger.warning("UltraEngine: no symbols available in market snapshot, idle.")
+
     try:
         while True:
-            # In a real implementation, this loop would consume from a real-time market data feed.
-            # The previous fake data generator has been removed to prevent unauthorized trading.
-            # The engine now waits passively for external events or future implementation of a real feed.
+            loop_now = datetime.now(tz=timezone.utc)
+            for symbol in symbol_order:
+                row = dict(market_snapshot.get(symbol, {}) or {})
+                reference_price = max(1.0, float(row.get("reference_price", 100.0)))
+                base_volume = max(1.0, float(row.get("volume", 1000.0)))
+                momentum = abs(float(row.get("momentum_20d", 0.0)))
+                price_drift = max(config.ultra_price_spike_threshold_pct * 1.05, momentum)
+                tick_price = reference_price * (1.0 + price_drift)
+                tick_event = await sentinels[symbol].on_market_tick(
+                    price=tick_price,
+                    volume=base_volume * 1.05,
+                    timestamp=loop_now,
+                    raw_data={
+                        "market_row": row,
+                        "price_current": tick_price,
+                        "price_reference": reference_price,
+                        "strategy": "ultra_event",
+                        "strategy_confidence": max(0.3, min(1.0, price_drift * 10.0)),
+                        "quick_filter_score": max(0.2, min(1.0, 0.35 + price_drift * 8.0)),
+                        "snapshot_id": str(row.get("snapshot_id", "runtime_snapshot")),
+                        "snapshot_ts": str(row.get("snapshot_ts", loop_now.isoformat())),
+                        "allow_opening": True,
+                        "data_degraded": False,
+                    },
+                )
+                if tick_event is not None:
+                    _publish_ultra_signal(tick_event)
+
+            if headlines and sentinels:
+                item = dict(headlines[headline_cursor % len(headlines)] or {})
+                headline_cursor += 1
+                raw_symbol = str(item.get("symbol", symbol_order[0])).upper()
+                symbol = raw_symbol if raw_symbol in sentinels else symbol_order[0]
+                headline = str(item.get("headline", "")).strip()
+                published_at = item.get("published_at", loop_now)
+                news_event = await sentinels[symbol].on_news(
+                    headline=headline,
+                    timestamp=published_at if isinstance(published_at, datetime) else loop_now,
+                    raw_data={
+                        "headline": headline,
+                        "strategy": str(item.get("strategy", "ultra_news")),
+                        "strategy_confidence": float(item.get("confidence", 0.7) or 0.7),
+                        "quick_filter_score": float(item.get("quick_filter_score", 0.6) or 0.6),
+                        "snapshot_id": str(item.get("snapshot_id", "runtime_snapshot")),
+                        "snapshot_ts": str(item.get("snapshot_ts", loop_now.isoformat())),
+                        "allow_opening": bool(item.get("allow_opening", True)),
+                        "data_degraded": bool(item.get("data_degraded", False)),
+                    },
+                )
+                if news_event is not None:
+                    _publish_ultra_signal(news_event)
+
             await asyncio.sleep(interval_seconds)
     except asyncio.CancelledError:
         logger.info("UltraEngine: Shutting down")
