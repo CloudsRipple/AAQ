@@ -12,13 +12,13 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from phase0.ai.high import start_high_engine
+from phase0.ai.high import HighAdjustmentDecision, HighAssessment, start_high_engine
 from phase0.ai.low import start_low_engine
 from phase0.ai.ultra import start_ultra_engine
 from phase0.config import load_config
 from phase0.lanes.bus import AsyncEventBus, LaneEvent
-from phase0.models.signals import UltraSignalEvent
-from phase0.state_store import get_latest_low_analysis_state, upsert_low_analysis_state
+from phase0.models.signals import TradeDecision, UltraSignalEvent
+from phase0.state_store import get_latest_low_analysis_state, set_runtime_state, upsert_low_analysis_state
 
 
 def _ultra_signal_payload(symbol: str = "AAPL") -> dict[str, object]:
@@ -65,8 +65,56 @@ class EventDrivenHighEngineTests(unittest.TestCase):
                 payload = asyncio.run(self._run_high_once(config=config, seed_low=True))
         self.assertNotEqual("LOW_ANALYSIS_UNAVAILABLE", payload["reason"])
 
+    def test_high_engine_emits_execution_ready_decision(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = str(Path(tmp) / "state.db")
+            with patch.dict(os.environ, {"AI_STATE_DB_PATH": db_path, "AI_ENABLED": "false"}, clear=False):
+                config = load_config()
+                payload = asyncio.run(self._run_high_once(config=config, seed_low=True))
+        self.assertTrue(payload["approved"])
+        self.assertGreater(int(payload["quantity"]), 0)
+        self.assertIn("bracket_order", payload)
+        bracket = payload["bracket_order"]
+        self.assertEqual("BUY", bracket["parent"]["action"])
+        self.assertEqual("SELL", bracket["take_profit"]["action"])
+        self.assertEqual("SELL", bracket["stop_loss"]["action"])
+        self.assertEqual(payload["quantity"], bracket["parent"]["quantity"])
+        self.assertEqual(payload["quantity"], bracket["take_profit"]["quantity"])
+        self.assertEqual(payload["quantity"], bracket["stop_loss"]["quantity"])
+        self.assertIn("estimated_transaction_cost", payload)
+        TradeDecision.model_validate(payload)
+
+    def test_high_engine_uses_governance_snapshot_instead_of_raw_ai_adjustment(self) -> None:
+        forced_assessment = HighAssessment(
+            decision=HighAdjustmentDecision(
+                approved=True,
+                risk_multiplier=1.5,
+                stop_loss_pct=0.08,
+                reason="FORCED_AI_APPROVAL",
+            ),
+            mode="local",
+            committee_votes=[],
+            prompt="forced",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = str(Path(tmp) / "state.db")
+            with patch.dict(os.environ, {"AI_STATE_DB_PATH": db_path, "AI_ENABLED": "true"}, clear=False):
+                config = load_config()
+                with patch("phase0.ai.high.assess_high_lane_async", return_value=forced_assessment):
+                    payload = asyncio.run(self._run_high_once(config=config, seed_low=True))
+        self.assertEqual(1.0, float(payload["risk_multiplier"]))
+        self.assertEqual(config.ai_stop_loss_default_pct, float(payload["stop_loss_pct"]))
+
     async def _run_high_once(self, *, config: object, seed_low: bool) -> dict[str, object]:
         cfg = config
+        set_runtime_state(
+            cfg.ai_state_db_path,
+            drawdown=0.0,
+            day_trade_count=0,
+            cooldown_until="",
+            kill_switch_active=False,
+            equity=100000.0,
+        )
         if seed_low:
             upsert_low_analysis_state(
                 cfg.ai_state_db_path,

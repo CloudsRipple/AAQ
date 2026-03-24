@@ -83,6 +83,7 @@ class AsyncUltraSentinel(BaseUltraSentinel):
         self._embedding_model_name = str(config.ultra_embedding_model_name).strip() or "BAAI/bge-small-en-v1.5"
         self._store_uri = Path(config.ultra_lancedb_uri)
         self._executor_workers = max(1, int(config.ultra_executor_workers))
+        self._vector_enabled = bool(config.ai_enabled and str(config.llm_base_url).strip())
         self._ticks: deque[tuple[datetime, float, float]] = deque()
         self._executor: ThreadPoolExecutor | None = None
         self._embedder: Any = None
@@ -92,6 +93,9 @@ class AsyncUltraSentinel(BaseUltraSentinel):
 
     async def start(self) -> None:
         if self._started:
+            return
+        if not self._vector_enabled:
+            self._started = True
             return
         self._store_uri.mkdir(parents=True, exist_ok=True)
         self._executor = ThreadPoolExecutor(max_workers=self._executor_workers, thread_name_prefix="ultra-sentinel")
@@ -208,6 +212,8 @@ class AsyncUltraSentinel(BaseUltraSentinel):
         timestamp: datetime | None = None,
         raw_data: dict[str, Any] | None = None,
     ) -> "UltraSignalEvent" | None:
+        if not self._vector_enabled:
+            return None
         if not headline.strip():
             return None
         if not self._started:

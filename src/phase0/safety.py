@@ -17,7 +17,7 @@ class SafetyState:
 
     @property
     def allows_risk_execution(self) -> bool:
-        return self.mode == SafetyMode.NORMAL
+        return self.mode != SafetyMode.LOCKDOWN
 
 
 def assess_safety(

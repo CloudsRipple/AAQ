@@ -7,7 +7,8 @@ from typing import Any
 
 from .ai import evaluate_ultra_guard
 from .config import load_config
-from .lanes import InMemoryLaneBus, LaneEvent, run_lane_cycle_with_guard
+from .kernel.coordinator import run_guarded_coordinator_cycle
+from .lanes import InMemoryLaneBus, LaneEvent
 from .lanes.high import evaluate_event
 
 
@@ -128,7 +129,7 @@ def _run_unverified_stale_message(now: datetime) -> dict[str, Any]:
 
 def _run_safety_blocked_execution() -> dict[str, Any]:
     config = load_config()
-    output = run_lane_cycle_with_guard("AAPL", config=config, allow_risk_execution=False)
+    output = run_guarded_coordinator_cycle("AAPL", config=config, allow_risk_execution=False)
     decision = output["decisions"][0]
     checks = [
         {

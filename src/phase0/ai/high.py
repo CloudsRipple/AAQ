@@ -9,11 +9,16 @@ import json
 import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable
+from uuid import uuid4
 
 from pydantic import ValidationError
 
-from ..models.signals import HighDecisionEvent, UltraSignalEvent
-from ..state_store import get_latest_low_analysis_state
+from ..advisory.contracts import AdjustmentProposal
+from ..advisory.governance import GovernancePlane, HighPolicySnapshot
+from ..lanes.high import HighLaneSettings, evaluate_event
+from ..models.signals import TradeDecision, UltraSignalEvent
+from ..llm_gateway import LLMGatewaySettings, build_optional_gateway
+from ..state_store import get_latest_low_analysis_state, get_runtime_state, list_open_orders, list_positions
 
 if TYPE_CHECKING:
     from ..lanes.bus import AsyncEventBus
@@ -59,11 +64,13 @@ async def start_high_engine(
     
     llm_gateway = None
     if config.ai_enabled:
-        from ..llm_gateway import LLMGatewaySettings
         settings = LLMGatewaySettings.from_app_config(config)
-        llm_gateway = UnifiedLLMGateway(settings=settings, profile=config.runtime_profile)
+        llm_gateway = build_optional_gateway(settings=settings, profile=config.runtime_profile)
+        if llm_gateway is None:
+            logger.info("HighEngine: LLM gateway unavailable or unconfigured, continuing in placeholder mode")
     
     committee_models = [item.strip() for item in config.ai_high_committee_models.split(",") if item.strip()]
+    governance_plane = GovernancePlane.from_app_config(config)
     
     try:
         while True:
@@ -74,14 +81,11 @@ async def start_high_engine(
                 logger.info("HighEngine: Received ultra signal for %s, processing...", symbol)
                 low_state = get_latest_low_analysis_state(config.ai_state_db_path, symbol=symbol)
                 if low_state is None:
-                    unavailable_decision = HighDecisionEvent(
+                    unavailable_decision = _build_rejected_trade_decision(
                         symbol=symbol,
-                        approved=False,
-                        risk_multiplier=1.0,
+                        ultra_signal=ultra_signal,
                         stop_loss_pct=config.ai_stop_loss_default_pct,
                         reason="LOW_ANALYSIS_UNAVAILABLE",
-                        ultra_signal=ultra_signal,
-                        decision_ts=datetime.now(tz=timezone.utc),
                     )
                     decision_event = LaneEvent.from_payload(
                         event_type="decision",
@@ -93,6 +97,22 @@ async def start_high_engine(
 
                 analysis_payload = dict(low_state.get("analysis", {}) or {})
                 low_approved = bool(analysis_payload.get("committee_approved", False))
+                if not low_approved:
+                    rejected = _build_rejected_trade_decision(
+                        symbol=symbol,
+                        ultra_signal=ultra_signal,
+                        stop_loss_pct=config.ai_stop_loss_default_pct,
+                        reason="LOW_COMMITTEE_REJECTED",
+                    )
+                    bus.publish(
+                        "high.decision",
+                        LaneEvent.from_payload(
+                            event_type="decision",
+                            source_lane="high",
+                            payload=rejected.model_dump(mode="json"),
+                        ),
+                    )
+                    continue
 
                 assessment = await assess_high_lane_async(
                     strategy_name=str(ultra_signal.raw_data.get("strategy", ultra_signal.event_type)),
@@ -116,15 +136,28 @@ async def start_high_engine(
                     committee_min_support=config.ai_high_committee_min_support,
                     llm_gateway=llm_gateway,
                 )
-
-                decision_payload = HighDecisionEvent(
+                for proposal in _build_adjustment_proposals(
                     symbol=symbol,
-                    approved=assessment.decision.approved,
-                    risk_multiplier=assessment.decision.risk_multiplier,
-                    stop_loss_pct=assessment.decision.stop_loss_pct,
-                    reason=assessment.decision.reason,
+                    assessment=assessment,
+                    config=config,
+                    governance_mode=governance_plane.mode.value,
+                ):
+                    governance_decision = governance_plane.submit_adjustment(proposal)
+                    logger.info(
+                        "HighEngine governance: proposal=%s target=%s outcome=%s reason=%s",
+                        proposal.proposal_id,
+                        proposal.target_param,
+                        governance_decision.outcome.value,
+                        governance_decision.reason,
+                    )
+
+                decision_payload = _build_execution_ready_trade_decision(
+                    symbol=symbol,
                     ultra_signal=ultra_signal,
-                    decision_ts=datetime.now(tz=timezone.utc),
+                    policy_snapshot=governance_plane.current_snapshot(),
+                    policy_reason=_compose_policy_reason(assessment=assessment, governance_plane=governance_plane),
+                    config=config,
+                    market_snapshot=market_snapshot,
                 )
                 decision_event = LaneEvent.from_payload(
                     event_type="decision",
@@ -143,6 +176,297 @@ async def start_high_engine(
         logger.info("HighEngine: Shutting down")
     finally:
         bus.unsubscribe("ultra.signal", queue)
+
+
+def _build_execution_ready_trade_decision(
+    *,
+    symbol: str,
+    ultra_signal: UltraSignalEvent,
+    policy_snapshot: HighPolicySnapshot,
+    policy_reason: str,
+    config: AppConfig,
+    market_snapshot: dict[str, dict[str, float | str]],
+) -> TradeDecision:
+    raw_data = dict(ultra_signal.raw_data or {})
+    side = _normalize_side(raw_data.get("side"))
+    strategy_id = _extract_strategy_id(ultra_signal)
+    snapshot_id = _extract_snapshot_id(raw_data)
+    snapshot_ts = _parse_optional_datetime(raw_data.get("snapshot_ts"))
+    allow_opening = bool(raw_data.get("allow_opening", True))
+    data_degraded = bool(raw_data.get("data_degraded", False))
+    data_quality_errors = list(raw_data.get("data_quality_errors", []) or [])
+    decision_time = datetime.now(tz=timezone.utc)
+    risk_multiplier = float(policy_snapshot.risk_multiplier)
+    stop_loss_pct = float(policy_snapshot.stop_loss_pct)
+
+    if side is None:
+        return _build_rejected_trade_decision(
+            symbol=symbol,
+            ultra_signal=ultra_signal,
+            stop_loss_pct=stop_loss_pct,
+            reason="ULTRA_SIDE_INVALID",
+        )
+    if strategy_id is None:
+        return _build_rejected_trade_decision(
+            symbol=symbol,
+            ultra_signal=ultra_signal,
+            stop_loss_pct=stop_loss_pct,
+            reason="STRATEGY_ID_MISSING",
+        )
+    if snapshot_id is None or snapshot_ts is None:
+        return _build_rejected_trade_decision(
+            symbol=symbol,
+            ultra_signal=ultra_signal,
+            stop_loss_pct=stop_loss_pct,
+            reason="SNAPSHOT_METADATA_MISSING",
+        )
+
+    row = dict(market_snapshot.get(symbol, {}) or {})
+    entry_price = float(raw_data.get("price_current", row.get("reference_price", 0.0)) or 0.0)
+    if entry_price <= 0:
+        return _build_rejected_trade_decision(
+            symbol=symbol,
+            ultra_signal=ultra_signal,
+            stop_loss_pct=stop_loss_pct,
+            reason="ENTRY_PRICE_UNAVAILABLE",
+        )
+
+    runtime = get_runtime_state(config.ai_state_db_path)
+    equity = float(runtime.equity or 0.0)
+    if equity <= 0:
+        return _build_rejected_trade_decision(
+            symbol=symbol,
+            ultra_signal=ultra_signal,
+            stop_loss_pct=stop_loss_pct,
+            reason="RUNTIME_EQUITY_UNAVAILABLE",
+        )
+
+    current_symbol_exposure = _symbol_exposure_notional(
+        symbol=symbol,
+        positions=list_positions(config.ai_state_db_path),
+        open_orders=list_open_orders(config.ai_state_db_path),
+    )
+    stop_loss_price, take_profit_price = _build_price_targets(
+        side=side,
+        entry_price=entry_price,
+        stop_loss_pct=stop_loss_pct,
+    )
+    high_event = {
+        "lane": "ultra",
+        "kind": "signal",
+        "symbol": symbol,
+        "side": side,
+        "entry_price": f"{entry_price:.6f}",
+        "stop_loss_price": f"{stop_loss_price:.6f}",
+        "take_profit_price": f"{take_profit_price:.6f}",
+        "equity": f"{equity:.6f}",
+        "current_exposure": f"{current_symbol_exposure:.6f}",
+        "current_symbol_exposure": f"{current_symbol_exposure:.6f}",
+        "current_exposure_unit": "notional",
+        "last_exit_at": str(raw_data.get("last_exit_at", "")),
+        "position_opened_at": str(raw_data.get("position_opened_at", "")),
+        "snapshot_id": snapshot_id,
+        "snapshot_ts": snapshot_ts.isoformat(),
+        "target_weight": str(raw_data.get("target_weight", "1.0")),
+        "equity_peak": str(raw_data.get("equity_peak", equity)),
+    }
+    final_decision = evaluate_event(
+        high_event,
+        settings=HighLaneSettings.from_app_config(config),
+        strategy_adjustments={
+            "risk_multiplier": risk_multiplier,
+            "take_profit_boost_pct": 0.0,
+        },
+    )
+    if final_decision.get("status") != "accepted":
+        reject_reasons = [str(item) for item in final_decision.get("reject_reasons", []) or []]
+        return TradeDecision(
+            symbol=symbol,
+            approved=False,
+            risk_multiplier=risk_multiplier,
+            stop_loss_pct=stop_loss_pct,
+            reason=reject_reasons[0] if reject_reasons else "HIGH_RULE_REJECTED",
+            reject_reasons=reject_reasons or ["HIGH_RULE_REJECTED"],
+            ultra_signal=ultra_signal,
+            decision_ts=decision_time,
+            side=side,
+            strategy_id=strategy_id,
+            signal_ts=ultra_signal.timestamp,
+            snapshot_id=snapshot_id,
+            snapshot_ts=snapshot_ts,
+            allow_opening=allow_opening,
+            data_degraded=data_degraded,
+            data_quality_errors=data_quality_errors,
+        )
+
+    return TradeDecision(
+        symbol=symbol,
+        approved=True,
+        risk_multiplier=risk_multiplier,
+        stop_loss_pct=stop_loss_pct,
+        reason=policy_reason,
+        reject_reasons=[],
+        ultra_signal=ultra_signal,
+        decision_ts=decision_time,
+        side=side,
+        strategy_id=strategy_id,
+        signal_ts=ultra_signal.timestamp,
+        snapshot_id=snapshot_id,
+        snapshot_ts=snapshot_ts,
+        quantity=int(final_decision["quantity"]),
+        bracket_order=dict(final_decision.get("bracket_order", {}) or {}),
+        estimated_transaction_cost=dict(final_decision.get("estimated_transaction_cost", {}) or {}),
+        allow_opening=allow_opening,
+        data_degraded=data_degraded,
+        data_quality_errors=data_quality_errors,
+)
+
+
+def _build_rejected_trade_decision(
+    *,
+    symbol: str,
+    ultra_signal: UltraSignalEvent,
+    stop_loss_pct: float,
+    reason: str,
+) -> TradeDecision:
+    raw_data = dict(ultra_signal.raw_data or {})
+    return TradeDecision(
+        symbol=symbol,
+        approved=False,
+        risk_multiplier=1.0,
+        stop_loss_pct=stop_loss_pct,
+        reason=reason,
+        reject_reasons=[reason],
+        ultra_signal=ultra_signal,
+        decision_ts=datetime.now(tz=timezone.utc),
+        side=_normalize_side(raw_data.get("side")),
+        strategy_id=_extract_strategy_id(ultra_signal),
+        signal_ts=ultra_signal.timestamp,
+        snapshot_id=_extract_snapshot_id(raw_data),
+        snapshot_ts=_parse_optional_datetime(raw_data.get("snapshot_ts")),
+        allow_opening=bool(raw_data.get("allow_opening", True)),
+        data_degraded=bool(raw_data.get("data_degraded", False)),
+        data_quality_errors=list(raw_data.get("data_quality_errors", []) or []),
+    )
+
+
+def _build_adjustment_proposals(
+    *,
+    symbol: str,
+    assessment: HighAssessment,
+    config: AppConfig,
+    governance_mode: str,
+) -> list[AdjustmentProposal]:
+    if not assessment.decision.approved:
+        return []
+    proposal_scope = f"symbol:{symbol.upper()}"
+    mode = governance_mode
+    ttl_seconds = max(60, int(config.ai_message_max_age_minutes * 60))
+    return [
+        AdjustmentProposal(
+            proposal_id=f"{symbol.upper()}-{uuid4().hex[:12]}-risk",
+            scope=proposal_scope,
+            target_param="high.risk_multiplier",
+            current_value=1.0,
+            suggested_value=assessment.decision.risk_multiplier,
+            min_allowed=config.high_risk_multiplier_min,
+            max_allowed=config.high_risk_multiplier_max,
+            confidence=1.0,
+            reason=assessment.decision.reason,
+            evidence_refs=[f"high.assessment:{assessment.mode}"],
+            ttl_seconds=ttl_seconds,
+            mode=mode,
+        ),
+        AdjustmentProposal(
+            proposal_id=f"{symbol.upper()}-{uuid4().hex[:12]}-stoploss",
+            scope=proposal_scope,
+            target_param="high.stop_loss_pct",
+            current_value=config.ai_stop_loss_default_pct,
+            suggested_value=assessment.decision.stop_loss_pct,
+            min_allowed=config.ai_stop_loss_default_pct,
+            max_allowed=config.ai_stop_loss_break_max_pct,
+            confidence=1.0,
+            reason=assessment.decision.reason,
+            evidence_refs=[f"high.assessment:{assessment.mode}"],
+            ttl_seconds=ttl_seconds,
+            mode=mode,
+        ),
+    ]
+
+
+def _compose_policy_reason(*, assessment: HighAssessment, governance_plane: GovernancePlane) -> str:
+    snapshot = governance_plane.current_snapshot()
+    if snapshot.source == "governance":
+        return f"GOVERNANCE_APPLIED:{snapshot.proposal_id}"
+    return f"BASELINE_POLICY:{assessment.decision.reason}"
+
+
+def _extract_strategy_id(ultra_signal: UltraSignalEvent) -> str | None:
+    raw_value = str(ultra_signal.raw_data.get("strategy", f"ultra_{ultra_signal.event_type}")).strip()
+    return raw_value or None
+
+
+def _extract_snapshot_id(raw_data: dict[str, Any]) -> str | None:
+    raw_value = str(raw_data.get("snapshot_id", "")).strip()
+    return raw_value or None
+
+
+def _normalize_side(raw_value: object) -> str | None:
+    side = str(raw_value or "").strip().lower()
+    if side in {"buy", "sell"}:
+        return side
+    return None
+
+
+def _parse_optional_datetime(raw_value: object) -> datetime | None:
+    if isinstance(raw_value, datetime):
+        if raw_value.tzinfo is None:
+            return raw_value.replace(tzinfo=timezone.utc)
+        return raw_value.astimezone(timezone.utc)
+    text = str(raw_value or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _build_price_targets(*, side: str, entry_price: float, stop_loss_pct: float) -> tuple[float, float]:
+    if side == "sell":
+        return entry_price * (1.0 + stop_loss_pct), entry_price * (1.0 - stop_loss_pct * 2.0)
+    return entry_price * (1.0 - stop_loss_pct), entry_price * (1.0 + stop_loss_pct * 2.0)
+
+
+def _symbol_exposure_notional(
+    *,
+    symbol: str,
+    positions: list[dict[str, Any]],
+    open_orders: list[dict[str, Any]],
+) -> float:
+    symbol_key = symbol.upper()
+    exposure = 0.0
+    avg_price = 0.0
+    for item in positions:
+        if str(item.get("symbol", "")).upper() != symbol_key:
+            continue
+        qty = abs(float(item.get("quantity", 0.0) or 0.0))
+        price = abs(float(item.get("avg_price", 0.0) or 0.0))
+        if price > 0:
+            avg_price = price
+        exposure += qty * price
+    for item in open_orders:
+        if str(item.get("symbol", "")).upper() != symbol_key:
+            continue
+        qty = abs(float(item.get("quantity", 0.0) or 0.0))
+        price = abs(float(item.get("reference_price", 0.0) or 0.0))
+        if price <= 0:
+            price = avg_price if avg_price > 0 else 1.0
+        exposure += qty * price
+    return max(0.0, exposure)
 
 def assess_high_lane(
     *,

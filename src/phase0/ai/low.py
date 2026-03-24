@@ -3,8 +3,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 
-
-from ..llm_gateway import UnifiedLLMGateway
+from ..llm_gateway import LLMGatewaySettings, UnifiedLLMGateway, build_optional_gateway
 from ..config import AppConfig
 from datetime import datetime, timezone
 import json
@@ -44,9 +43,10 @@ async def start_low_engine(
     logger.info("Starting LowEngine Daemon...")
     llm_gateway = None
     if config.ai_enabled:
-        from ..llm_gateway import LLMGatewaySettings
         settings = LLMGatewaySettings.from_app_config(config)
-        llm_gateway = UnifiedLLMGateway(settings=settings, profile=config.runtime_profile)
+        llm_gateway = build_optional_gateway(settings=settings, profile=config.runtime_profile)
+        if llm_gateway is None:
+            logger.info("LowEngine: LLM gateway unavailable or unconfigured, continuing in placeholder mode")
     
     committee_models = [item.strip() for item in config.ai_low_committee_models.split(",") if item.strip()]
 

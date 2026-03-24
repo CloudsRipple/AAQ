@@ -27,7 +27,7 @@ from ..audit import (
 from ..config import AppConfig
 from ..discipline import build_daily_discipline_plan, evaluate_hold_worthiness
 from ..ibkr_order_adapter import map_decision_to_ibkr_bracket
-from ..llm_gateway import LLMGatewaySettings, UnifiedLLMGateway
+from ..llm_gateway import LLMGatewaySettings, build_optional_gateway
 from ..market_data import compute_snapshot_id, load_market_snapshot_with_gate
 from ..strategies import StrategyContext, run_strategies
 from .bus import AsyncEventBus, InMemoryLaneBus, LaneEvent
@@ -104,12 +104,10 @@ async def run_lane_cycle_async(
     selected_market_row = snapshot.get(selected_symbol, {})
     lead_headline = headline_entries[0]
     if ai_enabled:
-        try:
-            settings = LLMGatewaySettings.from_app_config(config)
-            llm_gateway = UnifiedLLMGateway(settings=settings, profile=config.runtime_profile)
-        except Exception as exc:
-            logger.warning("LLM Gateway initialization failed: %s", str(exc))
-            llm_gateway = None
+        settings = LLMGatewaySettings.from_app_config(config)
+        llm_gateway = build_optional_gateway(settings=settings, profile=config.runtime_profile)
+        if llm_gateway is None:
+            logger.info("Lane cycle: LLM gateway unavailable or unconfigured, continuing in placeholder mode")
         
         ultra = await _build_ultra_signal_snapshot(
             symbol=selected_symbol,

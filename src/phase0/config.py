@@ -114,8 +114,8 @@ def load_config() -> AppConfig:
 
     ibkr_host = os.getenv("IBKR_HOST", "127.0.0.1")
     ibkr_port = _read_int_env("IBKR_PORT", 7497)
-    llm_base_url = os.getenv("LLM_BASE_URL", "http://localhost:11434/v1")
-    llm_api_key = os.getenv("LLM_API_KEY", "dummy")
+    llm_base_url = os.getenv("LLM_BASE_URL", "").strip()
+    llm_api_key = os.getenv("LLM_API_KEY", "").strip()
     llm_local_model = os.getenv("LLM_LOCAL_MODEL", "llama3.1:8b")
     llm_cloud_model = os.getenv("LLM_CLOUD_MODEL", "gpt-4o-mini")
     llm_timeout_seconds = _read_float_env("LLM_TIMEOUT_SECONDS", 20.0)

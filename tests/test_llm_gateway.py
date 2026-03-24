@@ -7,7 +7,12 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from phase0.config import RuntimeProfile
-from phase0.llm_gateway import LLMGatewaySettings, RateLimiter, UnifiedLLMGateway
+from phase0.llm_gateway import (
+    LLMGatewaySettings,
+    RateLimiter,
+    UnifiedLLMGateway,
+    build_optional_gateway,
+)
 
 
 class RetryableError(Exception):
@@ -107,6 +112,20 @@ class LLMGatewayTests(unittest.TestCase):
         limiter.acquire()
         limiter.acquire()
         self.assertAlmostEqual(0.5, clock.now)
+
+    def test_optional_gateway_returns_none_when_placeholder_config(self) -> None:
+        settings = LLMGatewaySettings(
+            base_url="",
+            api_key="",
+            local_model="llama3.1:8b",
+            cloud_model="gpt-4o-mini",
+            timeout_seconds=20.0,
+            max_retries=2,
+            backoff_seconds=0.1,
+            rate_limit_per_second=100.0,
+        )
+        gateway = build_optional_gateway(settings=settings, profile=RuntimeProfile.LOCAL)
+        self.assertIsNone(gateway)
 
 
 if __name__ == "__main__":

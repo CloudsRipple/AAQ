@@ -38,6 +38,9 @@ class LLMGatewaySettings:
             return self.cloud_model
         return self.local_model
 
+    def is_configured(self) -> bool:
+        return bool(self.base_url.strip())
+
 
 class RateLimiter:
     def __init__(
@@ -176,6 +179,28 @@ class UnifiedLLMGateway:
             api_key=self._settings.api_key,
             timeout=self._settings.timeout_seconds,
         )
+
+
+def build_optional_gateway(
+    *,
+    settings: LLMGatewaySettings,
+    profile: RuntimeProfile,
+    client_factory: Callable[[], Any] | None = None,
+    limiter: RateLimiter | None = None,
+    sleeper: Callable[[float], None] | None = None,
+) -> UnifiedLLMGateway | None:
+    if not settings.is_configured():
+        return None
+    try:
+        return UnifiedLLMGateway(
+            settings=settings,
+            profile=profile,
+            client_factory=client_factory,
+            limiter=limiter,
+            sleeper=sleeper,
+        )
+    except Exception:
+        return None
 
 
 def _is_retryable_exception(exc: Exception) -> bool:

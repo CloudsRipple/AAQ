@@ -20,7 +20,7 @@ class SafetyTests(unittest.TestCase):
         state = assess_safety(ibkr_reachable=True, llm_reachable=False)
         self.assertEqual(SafetyMode.DEGRADED, state.mode)
         self.assertEqual("LLM_UNREACHABLE", state.reason)
-        self.assertFalse(state.allows_risk_execution)
+        self.assertTrue(state.allows_risk_execution)
 
     def test_enters_normal_when_dependencies_ready(self) -> None:
         state = assess_safety(ibkr_reachable=True, llm_reachable=True)

@@ -11,7 +11,7 @@ import tempfile
 from typing import Any
 
 from .config import load_config
-from .lanes import run_lane_cycle_with_guard
+from .kernel.coordinator import run_guarded_coordinator_cycle
 
 
 NON_AI_TEST_MODULES = [
@@ -117,7 +117,7 @@ def _functional_non_ai_checks() -> dict[str, Any]:
     os.environ["AI_ENABLED"] = "false"
     try:
         config = load_config()
-        lane = run_lane_cycle_with_guard("AAPL", config=config, allow_risk_execution=True)
+        lane = run_guarded_coordinator_cycle("AAPL", config=config, allow_risk_execution=True)
     finally:
         if previous is None:
             os.environ.pop("AI_ENABLED", None)

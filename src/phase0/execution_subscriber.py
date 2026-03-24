@@ -11,8 +11,7 @@ from .config import AppConfig
 from .ibkr_execution import execute_intents_with_control_plane
 from .ibkr_order_adapter import map_decision_to_ibkr_bracket
 from .lanes.bus import AsyncEventBus, LaneEvent
-from .lanes.high import HighLaneSettings, evaluate_event
-from .models.signals import ExecutionIntentEvent, HighDecisionEvent
+from .models.signals import OrderIntent, TradeDecision
 from .state_store import get_runtime_state, list_open_orders, list_positions
 
 logger = logging.getLogger(__name__)
@@ -26,7 +25,6 @@ async def start_execution_subscriber(
     logger.info("Starting ExecutionSubscriber Daemon...")
     decision_queue = bus.subscribe("high.decision")
     intent_queue = bus.subscribe("execution.intent")
-    lane_settings = HighLaneSettings.from_app_config(config)
 
     decision_worker = asyncio.create_task(
         _consume_high_decisions(
@@ -40,7 +38,6 @@ async def start_execution_subscriber(
         _consume_execution_intents(
             queue=intent_queue,
             config=config,
-            lane_settings=lane_settings,
         )
     )
 
@@ -83,7 +80,6 @@ async def _consume_execution_intents(
     *,
     queue: asyncio.Queue[Any],
     config: AppConfig,
-    lane_settings: HighLaneSettings,
 ) -> None:
     while True:
         event = await queue.get()
@@ -91,7 +87,6 @@ async def _consume_execution_intents(
             await _handle_execution_intent_event(
                 event=event,
                 config=config,
-                lane_settings=lane_settings,
             )
         except Exception as exc:
             logger.error("ExecutionSubscriber: failed to process execution.intent: %s", str(exc))
@@ -107,7 +102,7 @@ async def _handle_high_decision_event(
     market_snapshot: dict[str, dict[str, float | str]],
 ) -> None:
     try:
-        decision = HighDecisionEvent.model_validate(getattr(event, "payload", event))
+        decision = TradeDecision.model_validate(getattr(event, "payload", event))
     except ValidationError as exc:
         logger.error("ExecutionSubscriber: invalid high.decision payload, fail-closed: %s", str(exc))
         return
@@ -135,38 +130,30 @@ async def _handle_high_decision_event(
 
 def _build_execution_intent_from_decision(
     *,
-    decision: HighDecisionEvent,
+    decision: TradeDecision,
     config: AppConfig,
     market_snapshot: dict[str, dict[str, float | str]],
-) -> ExecutionIntentEvent | None:
+) -> OrderIntent | None:
     symbol = decision.symbol.upper()
     ultra = decision.ultra_signal
     raw_data = dict(ultra.raw_data or {})
-    side = str(raw_data.get("side", "buy")).strip().lower()
+    side = str(decision.side or raw_data.get("side", "")).strip().lower()
     if side not in {"buy", "sell"}:
         logger.error("ExecutionSubscriber: missing/invalid side for %s, fail-closed", symbol)
         return None
 
-    row = dict(market_snapshot.get(symbol, {}) or {})
-    entry_price = float(raw_data.get("price_current", row.get("reference_price", 0.0)) or 0.0)
-    if entry_price <= 0:
-        logger.error("ExecutionSubscriber: missing entry_price for %s, fail-closed", symbol)
+    quantity = int(decision.quantity or 0)
+    bracket_order = dict(decision.bracket_order or {})
+    estimated_transaction_cost = dict(decision.estimated_transaction_cost or {})
+    if quantity <= 0 or not bracket_order or not estimated_transaction_cost:
+        logger.error("ExecutionSubscriber: high decision for %s is not execution-ready, fail-closed", symbol)
         return None
 
-    stop_pct = float(decision.stop_loss_pct)
-    if stop_pct <= 0:
-        logger.error("ExecutionSubscriber: invalid stop_loss_pct for %s, fail-closed", symbol)
+    prices = _extract_bracket_prices(bracket_order)
+    if prices is None:
+        logger.error("ExecutionSubscriber: invalid bracket order for %s, fail-closed", symbol)
         return None
-
-    if side == "buy":
-        stop_loss = entry_price * (1.0 - stop_pct)
-        take_profit = entry_price * (1.0 + stop_pct * 2.0)
-    else:
-        stop_loss = entry_price * (1.0 + stop_pct)
-        take_profit = entry_price * (1.0 - stop_pct * 2.0)
-    if stop_loss <= 0 or take_profit <= 0:
-        logger.error("ExecutionSubscriber: generated invalid bracket prices for %s, fail-closed", symbol)
-        return None
+    entry_price, stop_loss, take_profit = prices
 
     runtime = get_runtime_state(config.ai_state_db_path)
     equity = float(runtime.equity or 0.0)
@@ -174,31 +161,26 @@ def _build_execution_intent_from_decision(
         logger.error("ExecutionSubscriber: missing runtime equity for %s, fail-closed", symbol)
         return None
 
-    positions = list_positions(config.ai_state_db_path)
-    open_orders = list_open_orders(config.ai_state_db_path)
     current_symbol_exposure = _symbol_exposure_notional(
         symbol=symbol,
-        positions=positions,
-        open_orders=open_orders,
+        positions=list_positions(config.ai_state_db_path),
+        open_orders=list_open_orders(config.ai_state_db_path),
     )
-
-    snapshot_id = str(raw_data.get("snapshot_id", "")).strip()
-    snapshot_ts_raw = raw_data.get("snapshot_ts")
-    if not snapshot_id or not snapshot_ts_raw:
+    snapshot_id = str(decision.snapshot_id or raw_data.get("snapshot_id", "")).strip()
+    snapshot_ts_raw = decision.snapshot_ts or _parse_optional_datetime(raw_data.get("snapshot_ts"))
+    if not snapshot_id or snapshot_ts_raw is None:
         logger.error("ExecutionSubscriber: missing snapshot metadata for %s, fail-closed", symbol)
         return None
 
-    last_exit_at_raw = raw_data.get("last_exit_at")
-    last_exit_at: datetime | None = None
-    if isinstance(last_exit_at_raw, str) and last_exit_at_raw.strip():
-        try:
-            last_exit_at = datetime.fromisoformat(last_exit_at_raw.replace("Z", "+00:00"))
-        except ValueError:
-            last_exit_at = None
+    last_exit_at = _parse_optional_datetime(raw_data.get("last_exit_at"))
     last_exit_reason = str(raw_data.get("last_exit_reason", "NOT_AVAILABLE_IN_STATE_STORE"))
+    strategy_id = str(decision.strategy_id or raw_data.get("strategy", f"ultra_{ultra.event_type}")).strip()
+    if not strategy_id:
+        logger.error("ExecutionSubscriber: missing strategy_id for %s, fail-closed", symbol)
+        return None
 
     try:
-        return ExecutionIntentEvent(
+        return OrderIntent(
             symbol=symbol,
             side=side,
             entry_price=entry_price,
@@ -210,14 +192,17 @@ def _build_execution_intent_from_decision(
             last_exit_reason=last_exit_reason,
             snapshot_id=snapshot_id,
             snapshot_ts=snapshot_ts_raw,
-            strategy_id=str(raw_data.get("strategy", f"ultra_{ultra.event_type}")),
+            strategy_id=strategy_id,
             risk_multiplier=float(decision.risk_multiplier),
-            stop_loss_pct=stop_pct,
+            stop_loss_pct=float(decision.stop_loss_pct),
             high_reason=decision.reason,
             ultra_signal=ultra,
-            allow_opening=bool(raw_data.get("allow_opening", True)),
-            data_degraded=bool(raw_data.get("data_degraded", False)),
-            data_quality_errors=list(raw_data.get("data_quality_errors", []) or []),
+            quantity=quantity,
+            bracket_order=bracket_order,
+            estimated_transaction_cost=estimated_transaction_cost,
+            allow_opening=bool(decision.allow_opening),
+            data_degraded=bool(decision.data_degraded),
+            data_quality_errors=list(decision.data_quality_errors or []),
         )
     except ValidationError as exc:
         logger.error("ExecutionSubscriber: invalid execution.intent payload, fail-closed: %s", str(exc))
@@ -228,52 +213,29 @@ async def _handle_execution_intent_event(
     *,
     event: Any,
     config: AppConfig,
-    lane_settings: HighLaneSettings,
 ) -> None:
     try:
-        intent = ExecutionIntentEvent.model_validate(getattr(event, "payload", event))
+        intent = OrderIntent.model_validate(getattr(event, "payload", event))
     except ValidationError as exc:
         logger.error("ExecutionSubscriber: invalid execution.intent payload, fail-closed: %s", str(exc))
         return
 
-    high_event = {
-        "lane": "ultra",
-        "kind": "signal",
-        "symbol": intent.symbol,
-        "side": intent.side,
-        "entry_price": str(intent.entry_price),
-        "stop_loss_price": str(intent.stop_loss),
-        "take_profit_price": str(intent.take_profit),
-        "equity": str(intent.equity),
-        "current_exposure": str(intent.current_symbol_exposure),
-        "current_symbol_exposure": str(intent.current_symbol_exposure),
-        "current_exposure_unit": "notional",
-        "last_exit_at": intent.last_exit_at.isoformat() if intent.last_exit_at else "",
-        "snapshot_id": intent.snapshot_id,
-        "snapshot_ts": intent.snapshot_ts.isoformat(),
-    }
-    decision = evaluate_event(
-        event=high_event,
-        settings=lane_settings,
-        strategy_adjustments={"risk_multiplier": intent.risk_multiplier, "take_profit_boost_pct": 0.0},
+    ibkr_signal = map_decision_to_ibkr_bracket(
+        {
+            "status": "accepted",
+            "symbol": intent.symbol,
+            "quantity": intent.quantity,
+            "bracket_order": intent.bracket_order,
+            "strategy_id": intent.strategy_id,
+            "signal_ts": intent.snapshot_ts.isoformat(),
+            "side": intent.side.upper(),
+            "snapshot_id": intent.snapshot_id,
+            "snapshot_ts": intent.snapshot_ts.isoformat(),
+        }
     )
-    if decision.get("status") != "accepted":
-        logger.warning(
-            "ExecutionSubscriber: high lane rejected execution.intent for %s: %s",
-            intent.symbol,
-            decision.get("reject_reasons", []),
-        )
-        return
-
-    ibkr_signal = map_decision_to_ibkr_bracket(decision)
     if ibkr_signal is None:
         logger.error("ExecutionSubscriber: failed to map execution.intent for %s", intent.symbol)
         return
-    ibkr_signal["strategy_id"] = intent.strategy_id
-    ibkr_signal["signal_ts"] = intent.snapshot_ts.isoformat()
-    ibkr_signal["side"] = intent.side.upper()
-    ibkr_signal["snapshot_id"] = intent.snapshot_id
-    ibkr_signal["snapshot_ts"] = intent.snapshot_ts.isoformat()
 
     lane_output = {
         "source": "event_driven_runtime",
@@ -302,6 +264,33 @@ async def _handle_execution_intent_event(
         logger.info("ExecutionSubscriber: order submitted for %s", intent.symbol)
     else:
         logger.error("ExecutionSubscriber: order submission failed for %s: %s", intent.symbol, executions)
+
+
+def _extract_bracket_prices(bracket_order: dict[str, Any]) -> tuple[float, float, float] | None:
+    parent = dict(bracket_order.get("parent", {}) or {})
+    take_profit = dict(bracket_order.get("take_profit", {}) or {})
+    stop_loss = dict(bracket_order.get("stop_loss", {}) or {})
+    try:
+        entry_price = float(parent.get("limit_price", 0.0) or 0.0)
+        take_profit_price = float(take_profit.get("limit_price", 0.0) or 0.0)
+        stop_loss_price = float(stop_loss.get("stop_price", 0.0) or 0.0)
+    except (TypeError, ValueError):
+        return None
+    if entry_price <= 0 or take_profit_price <= 0 or stop_loss_price <= 0:
+        return None
+    return entry_price, stop_loss_price, take_profit_price
+
+
+def _parse_optional_datetime(raw_value: object) -> datetime | None:
+    if isinstance(raw_value, datetime):
+        return raw_value
+    text = str(raw_value or "").strip()
+    if not text:
+        return None
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
 
 
 def _symbol_exposure_notional(

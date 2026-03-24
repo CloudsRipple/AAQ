@@ -33,6 +33,12 @@ def run_llm_probe(
         "base_url": settings.base_url,
         "model": settings.resolve_model(active_profile),
     }
+    if not settings.is_configured():
+        report["ok"] = False
+        report["skipped"] = True
+        report["reason"] = "LLM_PLACEHOLDER_CONFIG"
+        report["error_code"] = ErrorCode.INTERNAL_ERROR.value
+        return report
     try:
         gateway = UnifiedLLMGateway(settings=settings, profile=active_profile)
         report["model"] = gateway.model

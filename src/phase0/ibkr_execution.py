@@ -15,7 +15,7 @@ from .execution_lifecycle import (
     process_execution_report,
     submit_with_retry,
 )
-from .lanes import run_lane_cycle
+from .kernel.coordinator import run_coordinator_cycle
 from .observability import build_metrics_snapshot, evaluate_alerts, log_event
 from .risk_engine import evaluate_order_intents
 from .state_store import (
@@ -293,7 +293,7 @@ def execute_cycle(
             "system_state": status,
             "blocked_reason": "KILL_SWITCH_ACTIVE",
         }
-    lane_output = run_lane_cycle(symbol=symbol, config=config, daily_state=daily_state)
+    lane_output = run_coordinator_cycle(symbol=symbol, config=config, daily_state=daily_state)
     set_runtime_state(
         state_db_path,
         drawdown=_read_current_drawdown_pct(),
